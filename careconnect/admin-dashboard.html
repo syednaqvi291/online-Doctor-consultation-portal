@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | CareConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f7f6; display: flex; margin: 0; }
+        .sidebar { width: 250px; background: #1a202c; color: white; min-height: 100vh; padding: 20px; position: fixed; }
+        .content { margin-left: 250px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .logout { color: #fc8181; text-decoration: none; border: 1px solid #fc8181; padding: 8px; display: block; text-align: center; border-radius: 5px; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <hr>
+        <p><i class="fas fa-users-cog"></i> Manage Platform</p>
+        <a href="index.html" class="logout" onclick="localStorage.clear()">Logout</a>
+    </div>
+    <div class="content">
+        <div class="card">
+            <h1>Welcome, Administrator</h1>
+            <p>System status: All systems operational.</p>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="card"><h3>12</h3><p>Doctors</p></div>
+            <div class="card"><h3>150</h3><p>Patients</p></div>
+            <div class="card"><h3>₹25,000</h3><p>Earnings</p></div>
+        </div>
+    </div>
+</body>
+</html>

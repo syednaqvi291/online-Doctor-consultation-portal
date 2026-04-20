@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Connect - Secure Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+        body {
+            font-family: 'Poppins', sans-serif; margin: 0; height: 100vh; display: flex;
+            justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #007bff 0%, #00d2ff 100%);
+        }
+        .auth-container {
+            background: white; padding: 30px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .logo { font-size: 40px; color: #007bff; margin-bottom: 10px; }
+        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #007bff; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 12px 15px 12px 45px;
+            border: 2px solid #f0f0f0; border-radius: 10px; outline: none;
+        }
+        .btn-main {
+            width: 100%; padding: 12px; background: #007bff; color: white;
+            border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
+        }
+        .toggle-form { margin-top: 20px; font-size: 14px; color: #666; cursor: pointer; }
+        .toggle-form span { color: #007bff; font-weight: 600; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="logo"><i class="fas fa-heartbeat"></i></div>
+        <h2 id="formTitle">Doctor Connect</h2>
+        <p id="formSubTitle">Log in to your account</p>
+
+        <div id="loginSection">
+            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="Email"></div>
+            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password"></div>
+            <div class="input-group">
+                <i class="fas fa-user-shield"></i>
+                <select id="loginRole">
+                    <option value="patient">Login as Patient</option>
+                    <option value="doctor">Login as Doctor</option>
+                    <option value="admin">Login as Admin</option>
+                </select>
+            </div>
+            <button class="btn-main" onclick="loginUser()">Log In Securely</button>
+            <div class="toggle-form" onclick="toggleAuth()">New user? <span>Create Account</span></div>
+        </div>
+
+        <div id="registerSection" class="hidden">
+            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full Name"></div>
+            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email Address"></div>
+            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password"></div>
+            <div class="input-group">
+                <i class="fas fa-id-card"></i>
+                <select id="regRole">
+                    <option value="patient">Register as Patient</option>
+                    <option value="doctor">Register as Doctor</option>
+                </select>
+            </div>
+            <button class="btn-main" onclick="registerUser()">Sign Up Now</button>
+            <div class="toggle-form" onclick="toggleAuth()">Already have an account? <span>Login</span></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        function toggleAuth() {
+            document.getElementById('loginSection').classList.toggle('hidden');
+            document.getElementById('registerSection').classList.toggle('hidden');
+            const isLogin = !document.getElementById('loginSection').classList.contains('hidden');
+            document.getElementById('formTitle').innerText = isLogin ? "Doctor Connect" : "Join CareConnect";
+            document.getElementById('formSubTitle').innerText = isLogin ? "Log in to your account" : "Create your medical profile";
+        }
+    </script>
+</body>
+</html>

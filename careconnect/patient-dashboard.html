@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareConnect | Patient Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://meet.jit.si/external_api.js"></script>
+    <style>
+        /* AAPKA ORIGINAL DARK DESIGN - NO CHANGES */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f0f4f8; }
+        .sidebar { width: 230px; background: #0f172a; height: 100vh; color: white; padding: 25px; position: fixed; display: flex; flex-direction: column; }
+        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 40px; }
+        .nav-item { padding: 12px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; gap: 12px; transition: 0.3s; margin-bottom: 5px; }
+        .nav-item.active { color: white; background: #1e293b; border-radius: 8px; }
+        .sos-btn { background: #ef4444; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
+
+        .main { margin-left: 260px; padding: 40px; width: 100%; }
+        .stats-row { display: flex; gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 15px 25px; border-radius: 15px; flex: 1; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; border: 1px solid #e2e8f0; }
+        
+        #drGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .dr-card { background: white; border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #e2e8f0; transition: 0.3s; }
+        .dr-img { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
+
+        .btn { padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; font-size: 13px; }
+        .btn-vid { background: #10b981; color: white; }
+        .btn-chat { background: #f59e0b; color: white; }
+        .btn-book { background: #3b82f6; color: white; }
+
+        /* Video Popup Styling */
+        #video-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; padding: 20px; flex-direction: column; }
+        #jitsi-area { flex: 1; border-radius: 15px; overflow: hidden; }
+
+        /* Chat Popup Styling */
+        #chat-window { display: none; position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 2000; flex-direction: column; border: 1px solid #3b82f6; }
+        .chat-header { background: #3b82f6; color: white; padding: 15px; display: flex; justify-content: space-between; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="video-modal">
+        <div id="jitsi-area"></div>
+        <button onclick="stopCall()" style="background:red; color:white; padding:10px; border:none; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:bold;">End Consultation</button>
+    </div>
+
+    <div id="chat-window">
+        <div class="chat-header"><span>Chat with Dr. <span id="chatDrName"></span></span><i class="fas fa-times" onclick="closeChat()" style="cursor:pointer;"></i></div>
+        <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; background:#f8fafc;"></div>
+        <div style="padding:10px; display:flex; gap:5px; border-top:1px solid #ddd;">
+            <input type="text" id="chatInp" placeholder="Type..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px;">
+            <button onclick="sendMsg()" style="background:#3b82f6; border:none; color:white; padding:8px 15px; border-radius:5px;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="logo">CareConnect</div>
+        <div class="nav-item active"><i class="fas fa-columns"></i> Dashboard</div>
+        <div class="nav-item" onclick="startAI()"><i class="fas fa-robot"></i> AI Health Chat</div>
+        <div class="nav-item"><i class="fas fa-calendar-alt"></i> My Appointments</div>
+        <button class="sos-btn" onclick="sendSOS()">EMERGENCY SOS</button>
+        <div class="nav-item" style="margin-top: auto; color: #ef4444;" onclick="logout()">
+            <i class="fas fa-power-off"></i> Logout
+        </div>
+    </aside>
+
+    <main class="main">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Welcome, <span id="uName" style="color: #3b82f6;">kumail</span>! 👋</h1>
+            <div style="color: #64748b;"><i class="fas fa-map-marker-alt"></i> Lucknow, India</div>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-card"><i class="fas fa-heartbeat" style="color:#ef4444; font-size:20px;"></i><div><small>Heart Rate</small><div style="font-weight:700;">72 bpm</div></div></div>
+            <div class="stat-card"><i class="fas fa-clock" style="color:#3b82f6; font-size:20px;"></i><div><small>Next Visit</small><div style="font-weight:700;">18 April</div></div></div>
+            <div class="stat-card"><i class="fas fa-user-md" style="color:#10b981; font-size:20px;"></i><div><small>Records</small><div style="font-weight:700;">12 Total</div></div></div>
+        </div>
+
+        <div id="drGrid"></div>
+    </main>
+
+    <script>
+        document.getElementById('uName').innerText = localStorage.getItem('userName') || 'kumail';
+        let jitsiApi = null;
+
+        async function fetchDocs() {
+            try {
+                const res = await axios.get("http://localhost:5000/api/user/doctors");
+                document.getElementById('drGrid').innerHTML = res.data.map(doc => `
+                    <div class="dr-card">
+                        <div class="dr-img"><i class="fas fa-user-md" style="font-size:40px; color:#3b82f6;"></i></div>
+                        <h3 style="margin:0;">Dr. ${doc.name}</h3>
+                        <p style="color:#64748b; font-size:12px;">${doc.role.toUpperCase()}</p>
+                        <button class="btn btn-vid" onclick="startCall('${doc.name}')"><i class="fas fa-video"></i> Video Call</button>
+                        <button class="btn btn-chat" onclick="openChat('${doc.name}')"><i class="fas fa-comment"></i> Chat Now</button>
+                        <button class="btn btn-book" onclick="goToBooking('${doc._id}', '${doc.name}')"><i class="fas fa-calendar-check"></i> Book Now</button>
+                    </div>
+                `).join('');
+            } catch (e) { console.log("Check Backend!"); }
+        }
+
+        // PURANE FUNCTIONS - NO CHANGE
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        function goToBooking(id, name) {
+            localStorage.setItem('selectedDoctorId', id);
+            localStorage.setItem('selectedDoctorName', name);
+            window.location.href = 'book-appointment.html';
+        }
+
+        // VIDEO CALL LOGIC
+        function startCall(name) {
+            document.getElementById('video-modal').style.display = 'flex';
+            jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
+                roomName: "CareConnect_" + name.replace(/\s/g, ''),
+                parentNode: document.querySelector('#jitsi-area')
+            });
+        }
+        function stopCall() { if(jitsiApi) jitsiApi.dispose(); document.getElementById('video-modal').style.display = 'none'; }
+
+        // CHAT LOGIC
+        function openChat(name) { document.getElementById('chat-window').style.display = 'flex'; document.getElementById('chatDrName').innerText = name; }
+        function closeChat() { document.getElementById('chat-window').style.display = 'none'; }
+        function sendMsg() {
+            let val = document.getElementById('chatInp').value;
+            if(!val) return;
+            document.getElementById('chat_msgs').innerHTML += `<div style="background:#3b82f6; color:white; padding:8px; border-radius:8px; margin-bottom:5px; align-self:flex-end;">${val}</div>`;
+            document.getElementById('chatInp').value = '';
+        }
+
+        async function startAI() {
+            const p = prompt("Ask AI:");
+            if(p) {
+                const res = await axios.post("http://localhost:5000/api/user/real-ai", {prompt: p});
+                alert("🩺 AI: " + res.data.answer);
+            }
+        }
+
+        async function sendSOS() {
+            if(confirm("Send Emergency SOS?")) {
+                const res = await axios.post("http://localhost:5000/api/user/sos");
+                alert(res.data.answer);
+            }
+        }
+
+        window.onload = fetchDocs;
+    </script>
+</body>
+</html>

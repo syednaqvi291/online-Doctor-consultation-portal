@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard | CareConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-bg: #1a202c;
+            --primary-blue: #0984e3;
+            --bg-light: #f7fafc;
+            --success: #00b894;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-light); display: flex; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px; background: var(--sidebar-bg); height: 100vh;
+            position: fixed; color: white; padding: 30px 20px;
+        }
+        .sidebar h2 { font-size: 22px; margin-bottom: 40px; color: var(--primary-blue); text-align: center; }
+        .nav-links { list-style: none; }
+        .nav-links li {
+            padding: 12px 15px; margin-bottom: 8px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: 0.3s; color: #cbd5e0;
+        }
+        .nav-links li:hover, .nav-links li.active { background: rgba(255,255,255,0.1); color: white; }
+        
+        /* Main Content */
+        .content { margin-left: 260px; width: 100%; padding: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .stat-card i { font-size: 24px; color: var(--primary-blue); margin-bottom: 10px; }
+
+        /* Card Section */
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .logout-btn { 
+            margin-top: 50px; border: 1px solid #fc8181; color: #fc8181; 
+            text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; 
+            text-decoration: none; display: block; font-weight: 500;
+        }
+        .logout-btn:hover { background: #fc8181; color: white; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>CareConnect</h2>
+        <ul class="nav-links">
+            <li class="active"><i class="fas fa-th-large"></i> Dashboard</li>
+            <li><i class="fas fa-calendar-check"></i> Appointments</li>
+            <li><i class="fas fa-users"></i> My Patients</li>
+            <li><i class="fas fa-cog"></i> Settings</li>
+        </ul>
+        <a href="index.html" class="logout-btn" onclick="localStorage.clear()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </aside>
+
+    <main class="content">
+        <header class="header">
+            <div>
+                <h1 id="doctorWelcome">Welcome, Doctor</h1>
+                <p style="color: #718096;">Here is an overview of your medical practice today.</p>
+            </div>
+            <div style="background: #edf2f7; padding: 10px 20px; border-radius: 30px; font-weight: 600; color: var(--primary-blue);">
+                <i class="fas fa-circle" style="font-size: 10px; color: #48bb78;"></i> Online
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-user-injured"></i>
+                <h3>0</h3>
+                <p style="color: #a0aec0; font-size: 14px;">Total Patients</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <h3>0</h3>
+                <p style="color: #a0aec0; font-size: 14px;">Appointments Today</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-wallet"></i>
+                <h3>₹0</h3>
+                <p style="color: #a0aec0; font-size: 14px;">Total Earnings</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 15px;">
+                <h3>Upcoming Appointments</h3>
+                <button style="color: var(--primary-blue); background: none; border: none; cursor: pointer; font-weight: 600;">Refresh List</button>
+            </div>
+            <div style="padding: 40px; text-align: center; color: #a0aec0;">
+                <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p>No appointments scheduled for the next 24 hours.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Use the name saved during login in script.js
+        window.onload = function() {
+            const name = localStorage.getItem('userName');
+            if (name) {
+                document.getElementById('doctorWelcome').innerText = "Welcome, Dr. " + name;
+            }
+        };
+    </script>
+
+</body>
+</html>
