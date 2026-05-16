@@ -1,39 +1,32 @@
-// Automatically handles local dev port vs live Vercel container link
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// ==================== WEBRTC ALTERNATIVE: JITSI VIDEO INFRASTRUCTURE ====================
-function startDoctorConsultation(appointmentId) {
-    const domain = "8x8.vc"; 
-    const options = {
-        roomName: `CareConnect-SecureRoom-${appointmentId}`,
-        width: "100%",
-        height: 500,
-        parentNode: document.getElementById("meet"), 
-        lang: "en",
-        configOverwrite: {
-            startWithAudioMuted: false,
-            startWithVideoMuted: false
+// ==================== SCREEN TOGGLE UTILITY ====================
+function toggleAuth() {
+    const loginSec = document.getElementById('loginSection');
+    const registerSec = document.getElementById('registerSection');
+    
+    if (loginSec && registerSec) {
+        if (loginSec.style.display === 'none') {
+            loginSec.style.display = 'block';
+            registerSec.style.display = 'none';
+        } else {
+            loginSec.style.display = 'none';
+            registerSec.style.display = 'block';
         }
-    };
-    const api = new JitsiMeetExternalAPI(domain, options);
-    console.log("Jitsi serverless live consultation frame ready.");
+    }
 }
 
-// ==================== REGISTRATION FEATURE ====================
+// ==================== REGISTRATION PIPELINE ====================
 async function registerUser() {
-    // Is code mein fallback tracking add kar di hai taaki agar id galti se short ya change ho, toh bhi data capture ho jaye
-    const fullName = document.getElementById('regFullName')?.value || document.getElementById('fullName')?.value || document.getElementById('name')?.value;
-    const email = document.getElementById('regEmail')?.value || document.getElementById('email')?.value;
-    const password = document.getElementById('regPassword')?.value || document.getElementById('password')?.value;
-    const role = document.getElementById('regRole')?.value || document.getElementById('role')?.value || 'Patient';
-
-    // Debugging terminal alert logic to check values inside console
-    console.log("Captured Sign-Up Trace:", { fullName, email, password, role });
+    const fullName = document.getElementById('regFullName')?.value?.trim();
+    const email = document.getElementById('regEmail')?.value?.trim();
+    const password = document.getElementById('regPassword')?.value?.trim();
+    const role = document.getElementById('regRole')?.value || 'Patient';
 
     if (!fullName || !email || !password) {
-        alert("Form evaluation failed. Make sure your input IDs match 'regFullName', 'regEmail', and 'regPassword' in HTML.");
+        alert("Please fill all fields");
         return;
     }
 
@@ -45,27 +38,22 @@ async function registerUser() {
             role
         });
 
-        if (response.data.success) {
-            alert("Registration successful! Redirecting...");
-            if (typeof toggleAuthMode === 'function') {
-                toggleAuthMode(); 
-            }
-        } else {
-            alert(response.data.message || "Registration trace rejected by server");
+        if (response.data.success || response.data) {
+            alert("Registration successful! Switching to login...");
+            toggleAuth();
         }
     } catch (error) {
-        console.error("Pipeline breakdown:", error);
-        alert(error.response?.data?.message || "Registration Pipeline Fault");
+        alert(error.response?.data?.message || "Account creation failed or server unreachable.");
     }
 }
 
-// ==================== LOGIN FEATURE ====================
+// ==================== LOGIN PIPELINE ====================
 async function loginUser() {
-    const email = document.getElementById('loginEmail')?.value || document.getElementById('email')?.value;
-    const password = document.getElementById('loginPassword')?.value || document.getElementById('password')?.value;
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    const password = document.getElementById('loginPassword')?.value?.trim();
 
     if (!email || !password) {
-        alert("Please provide credentials");
+        alert("Please fill all fields");
         return;
     }
 
@@ -75,13 +63,24 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            if (response.data.user.role === 'Doctor') {
-                window.location.href = 'doctor-dashboard.html';
-            } else {
-                window.location.href = 'patient-dashboard.html';
-            }
+            window.location.href = response.data.user.role === 'Doctor' 
+                ? 'doctor-dashboard.html' 
+                : 'patient-dashboard.html';
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Server connectivity error during authentication.");
+        alert(error.response?.data?.message || "Invalid email or password.");
     }
+}
+
+// Jitsi Call Launcher Hook
+function startDoctorConsultation(appointmentId) {
+    const domain = "8x8.vc"; 
+    const options = {
+        roomName: `CareConnect-SecureRoom-${appointmentId}`,
+        width: "100%",
+        height: 500,
+        parentNode: document.getElementById("meet"), 
+        lang: "en"
+    };
+    new JitsiMeetExternalAPI(domain, options);
 }

@@ -34,46 +34,71 @@
     </style>
 </head>
 <body>
-
     <div class="auth-container">
-        <div class="logo"><i class="fas fa-heartbeat"></i></div>
-        <h2 id="formTitle">Doctor Connect</h2>
-        <p id="formSubTitle">Log in to your account</p>
-
+        
         <div id="loginSection">
-            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="Email"></div>
-            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password"></div>
+            <p id="formSubtitle">Log in to your account</p>
+            
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="loginEmail" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+            </div>
+            
             <div class="input-group">
                 <i class="fas fa-user-shield"></i>
                 <select id="loginRole">
-                    <option value="patient">Login as Patient</option>
-                    <option value="doctor">Login as Doctor</option>
-                    <option value="admin">Login as Admin</option>
+                    <option value="Patient">Login as Patient</option>
+                    <option value="Doctor">Login as Doctor</option>
+                    <option value="Admin">Login as Admin</option>
                 </select>
             </div>
-            <button class="btn-main" onclick="loginUser()">Log In Securely</button>
-            <div class="toggle-form" onclick="toggleAuth()">New user? <span>Create Account</span></div>
+            
+            <button class="btn-main" onclick="loginUser()">Log In Secure</button>
+            <div class="toggle-form" onclick="toggleAuth()">New user? Register here</div>
         </div>
 
-        <div id="registerSection" class="hidden">
-            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full Name"></div>
-            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email Address"></div>
-            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password"></div>
+        <div id="registerSection" class="hidden" style="display: none;">
+            <p id="regSubtitle">Create your medical profile</p>
+            
             <div class="input-group">
-                <i class="fas fa-id-card"></i>
+                <i class="fas fa-user"></i>
+                <input type="text" id="regFullName" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="regEmail" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="regPassword" placeholder="Enter password" required>
+            </div>
+            
+            <div class="input-group">
+                <i class="fas fa-user-tag"></i>
                 <select id="regRole">
-                    <option value="patient">Register as Patient</option>
-                    <option value="doctor">Register as Doctor</option>
+                    <option value="Patient">Register as Patient</option>
+                    <option value="Doctor">Register as Doctor</option>
                 </select>
             </div>
+            
             <button class="btn-main" onclick="registerUser()">Sign Up Now</button>
-            <div class="toggle-form" onclick="toggleAuth()">Already have an account? <span>Login</span></div>
+            <div class="toggle-form" onclick="toggleAuth()">Already have an account? Login</div>
         </div>
+
     </div>
 
- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://8x8.vc/external_api.js"></script>
-<script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://8x8.vc/external_api.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
     <script>
         function toggleAuth() {
             document.getElementById('loginSection').classList.toggle('hidden');
