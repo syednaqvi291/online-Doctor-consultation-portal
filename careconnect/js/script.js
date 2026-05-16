@@ -5,22 +5,21 @@
  * Handles UI interactions, role toggles, and client-side form validation.*/
  // Backend URL matching your server.js
 // ============================================================
-// 1. GLOBAL SETTINGS & CHAT/VIDEO (SOCKET) INITIALIZATION
-// ============================================================
+// Universal Base Route for API Integration
 const API_URL = "/api";
-const socket = io(); // Automatically connects to your live Vercel/Render server
+const socket = io(); // Automatically hooks into your live Vercel/Render pipeline
 
-// Global elements for WebRTC Video Stream (Keeps your core WebRTC active)
+// Global parameters for WebRTC Video Calling
 let localStream;
 let remoteStream;
 let peerConnection;
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
 socket.on('connect', () => {
-    console.log('Connected to real-time communication server.');
+    console.log('Connected to secure real-time communication server.');
 });
 
-// Incoming Signaling for WebRTC Video Call
+// WebRTC Signaling Engine for Live Video Calls
 socket.on('message', async (message) => {
     try {
         if (message.type === 'offer') {
@@ -34,13 +33,11 @@ socket.on('message', async (message) => {
             await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
         }
     } catch (err) {
-        console.error("WebRTC signaling error:", err);
+        console.error("WebRTC System Trace Error:", err);
     }
 });
 
-// ============================================================
-// 2. USER AUTHENTICATION (LOGIN & REGISTER)
-// ============================================================
+// ==================== FEATURE 1 & 2: LOGIN & REGISTER ====================
 async function loginUser(event) {
     if(event) event.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -77,16 +74,14 @@ async function registerUser(event) {
     }
 }
 
-// ============================================================
-// 3. DOCTOR MANAGEMENT & APPOINTMENT PORTAL (100% FETCH GUARANTEE)
-// ============================================================
+// ==================== FEATURE 3: DOCTOR FETCH & DISCOVERY ====================
 function loadAvailableDoctors() {
     fetch(`${API_URL}/auth/doctors`)
         .then(response => response.json())
         .then(doctorsList => {
             const container = document.getElementById('doctor-list');
             if (container) {
-                container.innerHTML = ''; // Clears older content without breaking design
+                container.innerHTML = ''; 
                 doctorsList.forEach(doctor => {
                     container.innerHTML += `
                         <div class="doctor-card">
@@ -98,13 +93,14 @@ function loadAvailableDoctors() {
                 });
             }
         })
-        .catch(err => console.error("Error fetching doctors:", err));
+        .catch(err => console.error("Error pulling live doctor files:", err));
 }
 
 function navigateToAppointment(doctorId) {
     window.location.href = `book-appointment.html?doctorId=${doctorId}`;
 }
 
+// ==================== FEATURE 4: APPOINTMENT SCHEDULING ====================
 async function handleAppointmentBooking(event) {
     if(event) event.preventDefault();
     const doctorId = document.getElementById('doctorId').value;
@@ -122,13 +118,11 @@ async function handleAppointmentBooking(event) {
         }
     } catch (err) {
         console.error(err);
-        alert("Error booking appointment.");
+        alert("Error mapping database appointment slot.");
     }
 }
 
-// ============================================================
-// 4. AI-POWERED DISEASE PREDICTOR (PYTHON LINK INTEGRATION)
-// ============================================================
+// ==================== FEATURE 5: AI DISEASE PREDICTOR ====================
 async function checkSymptomsWithAI(event) {
     if(event) event.preventDefault();
     const symptomsInput = document.getElementById('symptomsText').value;
@@ -142,11 +136,11 @@ async function checkSymptomsWithAI(event) {
                                    <strong>Recommended Specialist:</strong> ${res.data.specialist}`;
         }
     } catch (err) {
-        if(resultDiv) resultDiv.innerText = "AI Analysis offline. Please schedule a direct call.";
+        if(resultDiv) resultDiv.innerText = "AI System offline. Please consult a doctor directly.";
     }
 }
 
-// Mapping DOM Listeners to match your existing HTML IDs
+// Global Event Triggers Mapping to match your HTML IDs
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('doctor-list')) loadAvailableDoctors();
     
