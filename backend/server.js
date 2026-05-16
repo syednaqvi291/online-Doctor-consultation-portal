@@ -1,28 +1,18 @@
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
 const cors = require('cors');
 const connectDB = require('./config/db');
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app);
 
-// Safe socket attachments for hybrid architectures
-const io = socketIo(server, {
-    cors: { origin: "*" },
-    transports: ['polling', 'websocket'],
-    allowEIO3: true
-});
-
-// Database Connection
+// Connect to Database
 connectDB();
 
 // Global Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Routes Deployed
+// Main Root API Gateways
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
@@ -39,18 +29,10 @@ app.post('/api/ai/predict', async (req, res) => {
     }
 });
 
-// ==================== FEATURE: WEBRTC & SOCKET CONNECTIONS ====================
-io.on('connection', (socket) => {
-    console.log('Active session linked: ' + socket.id);
-    socket.on('message', (payload) => {
-        socket.broadcast.emit('message', payload); 
-    });
-    socket.on('disconnect', () => {
-        console.log('Session dissolved cleanly.');
-    });
-});
+// Serverless mapping fallback for local development if run directly
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Local development server running on port ${PORT}`));
+}
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Active server operating on channel ${PORT}`));
-
-module.exports = server; // Explicitly exported for Vercel functions engine
+module.exports = app; // This is what Vercel needs to handle serverless requests flawlessly
