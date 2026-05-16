@@ -1,19 +1,18 @@
-// Strict Relative Path Config to execute seamlessly over Serverless architecture
-const API_URL = "/api";
+// Strict Relative API Configuration for Vercel Serverless Functions
+const API_URL = window.location.origin + "/api";
 
-// Safe Socket Initialization to prevent Vercel 500 runtime crashes
+// Safe dynamic fallback for socket connection on serverless deployments
 let socket;
 try {
-    socket = io({
-        transports: ['polling', 'websocket'],
+    socket = io(window.location.origin, {
+        transports: ['polling'],
         upgrade: false
     });
-    console.log('Real-time synchronization initialised.');
 } catch (e) {
-    console.log('Socket fallback active for stateless cloud environments.');
+    console.log("Socket connection managed via stateless fallback.");
 }
 
-// WebRTC Signaling Engine for Live Video Calls (Maintained 100%)
+// WebRTC Call Systems (100% Protected Logic)
 let localStream, remoteStream, peerConnection;
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
@@ -31,12 +30,12 @@ if (socket) {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
             }
         } catch (err) {
-            console.error("WebRTC Error Trace:", err);
+            console.error("Signaling error:", err);
         }
     });
 }
 
-// ==================== FEATURES: LOGIN & REGISTER ====================
+// ==================== AUTHENTICATION PIPELINES ====================
 async function loginUser(event) {
     if(event) event.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -53,7 +52,7 @@ async function loginUser(event) {
         else if (res.data.role === 'doctor') window.location.href = 'doctor-dashboard.html';
         else window.location.href = 'patient-dashboard.html';
     } catch (err) {
-        alert(err.response?.data?.message || "Server error: Check backend connectivity.");
+        alert(err.response?.data?.message || "Server connectivity error during authentication.");
     }
 }
 
@@ -69,11 +68,11 @@ async function registerUser(event) {
         alert(res.data.message || "Registration Successful!");
         location.reload();
     } catch (err) {
-        alert(err.response?.data?.message || "Registration failed.");
+        alert(err.response?.data?.message || "Registration trace rejected by server.");
     }
 }
 
-// ==================== FEATURE: DOCTOR FETCH & DISCOVERY ====================
+// ==================== DISCOVERY & DATA PULLS ====================
 function loadAvailableDoctors() {
     axios.get(`${API_URL}/auth/doctors`)
         .then(res => {
@@ -91,14 +90,14 @@ function loadAvailableDoctors() {
                 });
             }
         })
-        .catch(err => console.error("Error pulling live doctor files:", err));
+        .catch(err => console.error("Database streaming error:", err));
 }
 
 function navigateToAppointment(doctorId) {
     window.location.href = `book-appointment.html?doctorId=${doctorId}`;
 }
 
-// ==================== FEATURE: APPOINTMENT SCHEDULING ====================
+// ==================== APPOINTMENT BOOKING ====================
 async function handleAppointmentBooking(event) {
     if(event) event.preventDefault();
     const doctorId = document.getElementById('doctorId').value;
@@ -115,11 +114,11 @@ async function handleAppointmentBooking(event) {
             alert("Booking failed: " + res.data.message);
         }
     } catch (err) {
-        alert("Error mapping database appointment slot.");
+        alert("Server block: Slot booking allocation failed.");
     }
 }
 
-// ==================== FEATURE: AI DISEASE PREDICTOR ====================
+// ==================== AI ANALYSIS CORE ====================
 async function checkSymptomsWithAI(event) {
     if(event) event.preventDefault();
     const symptomsInput = document.getElementById('symptomsText').value;
@@ -133,11 +132,11 @@ async function checkSymptomsWithAI(event) {
                                    <strong>Recommended Specialist:</strong> ${res.data.specialist}`;
         }
     } catch (err) {
-        if(resultDiv) resultDiv.innerText = "AI System offline. Please consult a doctor directly.";
+        if(resultDiv) resultDiv.innerText = "AI Processing engine offline.";
     }
 }
 
-// DOM Event triggers
+// Global DOM Hooks
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('doctor-list')) loadAvailableDoctors();
     

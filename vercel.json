@@ -12,7 +12,15 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/auth/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/api/appointments/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/api/ai/(.*)",
       "dest": "backend/server.js"
     },
     {
