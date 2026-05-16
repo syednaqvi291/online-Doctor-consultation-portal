@@ -8,26 +8,25 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-// Live dynamic pooling over websockets
-const io = socketIo(server, { 
-    cors: { 
-        origin: "*",
-        methods: ["GET", "POST"]
-    } 
+// Safe socket attachments for hybrid architectures
+const io = socketIo(server, {
+    cors: { origin: "*" },
+    transports: ['polling', 'websocket'],
+    allowEIO3: true
 });
 
-// Database connectivity
+// Database Connection
 connectDB();
 
-// Middlewares
+// Global Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Main Root API Gateways
+// Routes Deployed
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-// AI System Gateway (Python Bridge Integration)
+// ==================== FEATURE: AI DISEASE PREDICTOR ====================
 app.post('/api/ai/predict', async (req, res) => {
     try {
         const { symptoms } = req.body;
@@ -40,18 +39,18 @@ app.post('/api/ai/predict', async (req, res) => {
     }
 });
 
-// Secure Channel for WebRTC Video Calls & Socket Chat
+// ==================== FEATURE: WEBRTC & SOCKET CONNECTIONS ====================
 io.on('connection', (socket) => {
-    console.log('User connected to active socket channel: ' + socket.id);
-
+    console.log('Active session linked: ' + socket.id);
     socket.on('message', (payload) => {
         socket.broadcast.emit('message', payload); 
     });
-
     socket.on('disconnect', () => {
-        console.log('Session disconnected.');
+        console.log('Session dissolved cleanly.');
     });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server compiled cleanly on port ${PORT}`));
+server.listen(PORT, () => console.log(`Active server operating on channel ${PORT}`));
+
+module.exports = server; // Explicitly exported for Vercel functions engine

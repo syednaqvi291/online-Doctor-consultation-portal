@@ -1,32 +1,42 @@
-// Strict Relative Path to sync with Vercel configuration
-const API_URL = window.location.origin + "/api";
-const socket = io(window.location.origin); 
+// Strict Relative Path Config to execute seamlessly over Serverless architecture
+const API_URL = "/api";
 
-// Global variables for WebRTC Video
-let localStream;
-let remoteStream;
-let peerConnection;
+// Safe Socket Initialization to prevent Vercel 500 runtime crashes
+let socket;
+try {
+    socket = io({
+        transports: ['polling', 'websocket'],
+        upgrade: false
+    });
+    console.log('Real-time synchronization initialised.');
+} catch (e) {
+    console.log('Socket fallback active for stateless cloud environments.');
+}
+
+// WebRTC Signaling Engine for Live Video Calls (Maintained 100%)
+let localStream, remoteStream, peerConnection;
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-// WebRTC Signaling Engine
-socket.on('message', async (message) => {
-    try {
-        if (message.type === 'offer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.emit('message', answer);
-        } else if (message.type === 'answer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
-        } else if (message.type === 'candidate') {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+if (socket) {
+    socket.on('message', async (message) => {
+        try {
+            if (message.type === 'offer') {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.emit('message', answer);
+            } else if (message.type === 'answer') {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+            } else if (message.type === 'candidate') {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+            }
+        } catch (err) {
+            console.error("WebRTC Error Trace:", err);
         }
-    } catch (err) {
-        console.error("WebRTC Error:", err);
-    }
-});
+    });
+}
 
-// ==================== LOGIN & REGISTER ====================
+// ==================== FEATURES: LOGIN & REGISTER ====================
 async function loginUser(event) {
     if(event) event.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -63,15 +73,14 @@ async function registerUser(event) {
     }
 }
 
-// ==================== DOCTOR FETCH & DISCOVERY ====================
+// ==================== FEATURE: DOCTOR FETCH & DISCOVERY ====================
 function loadAvailableDoctors() {
-    fetch(`${API_URL}/auth/doctors`)
-        .then(response => response.json())
-        .then(doctorsList => {
+    axios.get(`${API_URL}/auth/doctors`)
+        .then(res => {
             const container = document.getElementById('doctor-list');
             if (container) {
                 container.innerHTML = ''; 
-                doctorsList.forEach(doctor => {
+                res.data.forEach(doctor => {
                     container.innerHTML += `
                         <div class="doctor-card">
                             <h3>Dr. ${doctor.name}</h3>
@@ -82,14 +91,14 @@ function loadAvailableDoctors() {
                 });
             }
         })
-        .catch(err => console.error("Error pulling live doctor data:", err));
+        .catch(err => console.error("Error pulling live doctor files:", err));
 }
 
 function navigateToAppointment(doctorId) {
     window.location.href = `book-appointment.html?doctorId=${doctorId}`;
 }
 
-// ==================== APPOINTMENT SCHEDULING ====================
+// ==================== FEATURE: APPOINTMENT SCHEDULING ====================
 async function handleAppointmentBooking(event) {
     if(event) event.preventDefault();
     const doctorId = document.getElementById('doctorId').value;
@@ -106,11 +115,11 @@ async function handleAppointmentBooking(event) {
             alert("Booking failed: " + res.data.message);
         }
     } catch (err) {
-        alert("Error booking appointment slot.");
+        alert("Error mapping database appointment slot.");
     }
 }
 
-// ==================== AI DISEASE PREDICTOR ====================
+// ==================== FEATURE: AI DISEASE PREDICTOR ====================
 async function checkSymptomsWithAI(event) {
     if(event) event.preventDefault();
     const symptomsInput = document.getElementById('symptomsText').value;
@@ -124,11 +133,11 @@ async function checkSymptomsWithAI(event) {
                                    <strong>Recommended Specialist:</strong> ${res.data.specialist}`;
         }
     } catch (err) {
-        if(resultDiv) resultDiv.innerText = "AI Diagnostics system offline.";
+        if(resultDiv) resultDiv.innerText = "AI System offline. Please consult a doctor directly.";
     }
 }
 
-// Hooks matching your specific UI Layout IDs
+// DOM Event triggers
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('doctor-list')) loadAvailableDoctors();
     
