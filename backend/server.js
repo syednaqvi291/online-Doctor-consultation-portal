@@ -10,9 +10,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Strict Atlas Connection String fallback
+// Strict Cloud Database Cluster URI
 const dbUri = "mongodb+srv://kumailnaqvi292:kumailnaqvi292@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
 
+// Schema Blueprint matching user credentials precisely
 const UserSchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -22,28 +23,31 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-let isConnected = false;
+// Optimized Serverless Connection Cache Management
+let cachedDbConnection = null;
+
 const connectDB = async () => {
-    if (mongoose.connection.readyState === 1) {
-        isConnected = true;
-        return;
+    if (cachedDbConnection && mongoose.connection.readyState === 1) {
+        return cachedDbConnection;
     }
+    
     try {
-        const db = await mongoose.connect(dbUri, {
+        console.log("Initiating fresh database channel handshake...");
+        cachedDbConnection = await mongoose.connect(dbUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000 // Prevents serverless lambda from freezing
+            serverSelectionTimeoutMS: 8000,
+            socketTimeoutMS: 45000
         });
-        isConnected = db.connections[0].readyState >= 1;
-        console.log("Database secured successfully.");
+        return cachedDbConnection;
     } catch (err) {
         console.error("Database Connection Fault:", err.message);
-        isConnected = false;
+        cachedDbConnection = null;
         throw err;
     }
 };
 
-// Middleware to secure serverless database state pipeline
+// Global Pipeline Execution Shield Middleware
 app.use(async (req, res, next) => {
     try {
         await connectDB();
@@ -56,7 +60,7 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Registration Endpoint
+// Registration Endpoint Pipeline
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
@@ -91,7 +95,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// Login Endpoint
+// Login Endpoint Pipeline
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -128,7 +132,10 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/status', (req, res) => {
-    res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
+    res.status(200).json({ 
+        status: "online", 
+        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" 
+    });
 });
 
 module.exports = app;
