@@ -10,10 +10,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// DATABASE MONGO_URI DIRECT PRODUCTION BYPASS STRING
-const dbUri = process.env.MONGO_URI || "mongodb+srv://kumailnaqvi292:kumailnaqvi292@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority";
+// Strict Atlas Connection String fallback
+const dbUri = "mongodb+srv://kumailnaqvi292:kumailnaqvi292@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
 
-// Core Mongo Schema Setup inline to guarantee serverless structural alignment
 const UserSchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -25,30 +24,33 @@ const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 let isConnected = false;
 const connectDB = async () => {
-    if (isConnected) return;
+    if (isConnected && mongoose.connection.readyState === 1) return;
     try {
         const db = await mongoose.connect(dbUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000
+            serverSelectionTimeoutMS: 10000
         });
         isConnected = db.connections[0].readyState >= 1;
-        console.log("Database connection pipeline synchronized.");
+        console.log("Database secured successfully.");
     } catch (err) {
         console.error("Database Connection Fault:", err.message);
         isConnected = false;
+        throw err;
     }
 };
 
-// Inline Request Interceptor to check live pipeline status
+// Middleware to ensure database is connected before handling requests on serverless
 app.use(async (req, res, next) => {
-    await connectDB();
-    next();
+    try {
+        await connectDB();
+        next();
+    } catch (dbErr) {
+        return res.status(500).json({ message: "Database access restricted or IP not whitelisted.", details: dbErr.message });
+    }
 });
 
-// ==================== INLINE AUTHENTICATION ENGINES ====================
-
-// Registration Route Target Engine
+// Registration Endpoint
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
@@ -56,7 +58,8 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ message: "Please fill all fields" });
         }
 
-        const userExists = await User.findOne({ email: email.toLowerCase() });
+        const normalizedEmail = email.toLowerCase().trim();
+        const userExists = await User.findOne({ email: normalizedEmail });
         if (userExists) {
             return res.status(400).json({ message: "User already exists with this email" });
         }
@@ -65,8 +68,8 @@ app.post('/api/auth/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = await User.create({
-            fullName,
-            email: email.toLowerCase(),
+            fullName: fullName.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             role
         });
@@ -82,7 +85,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// Login Route Target Engine
+// Login Endpoint
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -90,7 +93,8 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ message: "Please fill all fields" });
         }
 
-        const user = await User.findOne({ email: email.toLowerCase() });
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
@@ -100,7 +104,11 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'careconnect_secret_token_key', { expiresIn: '1d' });
+        const token = jwt.sign(
+            { id: user._id, role: user.role }, 
+            process.env.JWT_SECRET || 'careconnect_secret_token_key', 
+            { expiresIn: '1d' }
+        );
 
         return res.status(200).json({
             success: true,
@@ -113,18 +121,9 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// Fallback dummy structure for modular appointment endpoints to keep routing clean
-app.get('/api/appointments', (req, res) => {
-    res.status(200).json({ success: true, appointments: [] });
-});
-
 app.get('/api/status', (req, res) => {
     res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
 });
 
-const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Local development cluster online on port ${PORT}`));
-}
-
+// Export the app for Vercel Serverless Function architecture
 module.exports = app;

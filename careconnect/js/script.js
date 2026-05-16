@@ -1,9 +1,7 @@
-// Dynamic mapping handling live runtime endpoints vs local environment containers
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// Visual Auth Toggle Engine (Keeps original styling intact)
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -23,7 +21,6 @@ function toggleAuth() {
     }
 }
 
-// User Registration Handler
 async function registerUser() {
     const fullName = document.getElementById('regFullName')?.value?.trim();
     const email = document.getElementById('regEmail')?.value?.trim();
@@ -47,15 +44,14 @@ async function registerUser() {
             alert("Registration successful! Switching to login...");
             toggleAuth();
         } else {
-            alert(response.data.message || "Registration encountered an unexpected issue.");
+            alert(response.data.message || "Registration encountered an issue.");
         }
     } catch (error) {
         console.error("Registration Frontend Log:", error);
-        alert(error.response?.data?.message || "Registration Pipeline Fault - Server Error.");
+        alert(error.response?.data?.message || "Registration Pipeline Fault.");
     }
 }
 
-// User Login Handler
 async function loginUser() {
     const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value?.trim();
@@ -67,16 +63,17 @@ async function loginUser() {
 
     try {
         const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-        if (response.data.success) {
+        if (response.data && response.data.success) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Production absolute path dashboard mapping execution
             const targetPage = response.data.user.role === 'Doctor' 
                 ? '/doctor-dashboard.html' 
                 : '/patient-dashboard.html';
                 
             window.location.href = window.location.origin + targetPage;
+        } else {
+            alert(response.data?.message || "Login failed.");
         }
     } catch (error) {
         console.error("Login Frontend Log:", error);
@@ -84,7 +81,6 @@ async function loginUser() {
     }
 }
 
-// WebRTC Engine Launcher
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
