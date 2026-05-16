@@ -1,15 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const Appointment = require('../models/Appointment.js'); // Check model name
+const Appointment = require('../models/Appointment');
 
 router.post('/book', async (req, res) => {
     try {
-        const { patientName, doctorName, date, time } = req.body;
-        const newApp = new Appointment({ patientName, doctorName, date, time });
-        await newApp.save();
-        res.status(201).json({ msg: "Appointment Booked Successfully!" });
+        const { doctorId, patientId, date, time } = req.body;
+        const freshLog = new Appointment({
+            doctor: doctorId,
+            patient: patientId,
+            date,
+            time
+        });
+        await freshLog.save();
+        res.status(201).json({ success: true, message: "Appointment linked inside database successfully!", data: freshLog });
     } catch (err) {
-        res.status(500).json({ msg: "Server Error", error: err.message });
+        res.status(500).json({ success: false, message: "Database logging failed", error: err.message });
     }
 });
 

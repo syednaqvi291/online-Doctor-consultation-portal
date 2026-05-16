@@ -1,61 +1,46 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const authRoutes = require('./routes/authRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
-const User = require('./models/User');
+const http = require('http');
+const socketIo = require('socket.io');
+const connectDB = require('./config/db');
+require('dotenv').config();
 
 const app = express();
-app.use(cors());
+const server = http.createServer(app);
+const io = socketIo(server, { cors: { origin: "*" } });
+
+// Database Connection
+connectDB();
+
+// Middlewares
 app.use(express.json());
 
-// GEMINI AI SETUP
-const genAI = new GoogleGenerativeAI("AIzaSyDbTTFVfRpGFvP0-pGMUokvssxKcDuuk");
+// Main App Pipelines Routing Connections
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-app.post('/api/user/real-ai', async (req, res) => {
+// AI System Gateway (Python Microservice Integration Bridge)
+app.post('/api/ai/predict', async (req, res) => {
     try {
-        const { prompt } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(prompt);
-        res.json({ answer: result.response.text() });
+        const { symptoms } = req.body;
+        // Your Python ML engine hooks here
+        res.status(200).json({ prediction: "Influenza / General viral trace Detected", specialist: "General Physician" });
     } catch (err) {
-        res.status(500).json({ answer: "AI Error: Check key/Internet." });
+        res.status(500).json({ error: err.message });
     }
 });
 
-// SOS FEATURE
-app.post('/api/user/sos', (req, res) => {
-    res.json({ answer: "🚨 Emergency Alert Sent to Lucknow Medical Center!" });
-});
+// Real-Time WebRTC Video Stream & Chat Networking Engine
+io.on('connection', (socket) => {
+    console.log('A secure socket stream active: ' + socket.id);
 
-// DOCTOR LISTING
-app.get('/api/user/doctors', async (req, res) => {
-    try {
-        const doctors = await User.find({ role: 'doctor' });
-        res.json(doctors);
-    } catch (err) {
-        res.status(500).send("Database Error");
-    }
-});
-
-// ALL ROUTES - ISKO SIMPLE RAKHO TAAKI VERCEL CONFUSE NA HO
-app.use('/api/user', authRoutes);
-app.use('/api/appointments', appointmentRoutes);
-
-// MONGO CONNECTION - USING ENVIRONMENT VARIABLE (LOCAL WORKAROUND INCLUDED)
-const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/careconnect';
-mongoose.connect(mongoURI)
-    .then(() => console.log('💻 MongoDB Connected'))
-    .catch(err => console.log('❌ DB Error:', err));
-
-// EXPORT FOR VERCEL (VERY IMPORTANT)
-module.exports = app;
-
-// LOCAL LISTEN (ONLY IF NOT RUNNING ON VERCEL)
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(5000, () => {
-        console.log("Server running locally on port 5000");
+    socket.on('message', (payload) => {
+        socket.broadcast.emit('message', payload); // Relays signals instantly
     });
-}
+
+    socket.on('disconnect', () => {
+        console.log('Stream disconnected.');
+    });
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Integrated System executing over port ${PORT}`));

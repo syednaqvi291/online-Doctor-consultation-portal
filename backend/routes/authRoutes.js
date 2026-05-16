@@ -1,47 +1,43 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
-// REGISTER ROUTE
-router.post('/register', async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
-        
-        const exists = await User.findOne({ email });
-        if (exists) return res.status(400).send('Email already registered');
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({ name, email, password: hashedPassword, role });
-        await newUser.save();
-        res.send({ message: "Account created successfully!" });
-    } catch (err) {
-        res.status(500).send('Error during registration');
-    }
-});
-
-// LOGIN ROUTE
+// User Login Route
 router.post('/login', async (req, res) => {
     try {
         const { email, password, role } = req.body;
-        const user = await User.findOne({ email });
-        
-        if (!user) return res.status(400).send('User not found');
-
-        // Role Check: Ensures user logs in with their correct role
-        if (user.role !== role) {
-            return res.status(403).send(`Access denied: Your account is a ${user.role} account.`);
+        const user = await User.findOne({ email, role });
+        if (!user || user.password !== password) {
+            return res.status(400).json({ message: "Invalid credentials or missing role profile." });
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).send('Invalid password');
-
-        const token = jwt.sign({ id: user._id, role: user.role }, 'care_secret_123');
-        res.json({ token, role: user.role, name: user.name });
+        res.status(200).json({ success: true, token: "mock-session-token", name: user.name, role: user.role });
     } catch (err) {
-        res.status(500).send('Login error');
+        res.status(500).json({ message: "Server login error", error: err.message });
+    }
+});
+
+// User Registration Route
+router.post('/register', async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ message: "Account already listed." });
+
+        const freshUser = new User({ name, email, password, role });
+        await freshUser.save();
+        res.status(201).json({ success: true, message: "Profile registered efficiently!" });
+    } catch (err) {
+        res.status(500).json({ message: "Server signup error", error: err.message });
+    }
+});
+
+// Fetch Doctors list Route (Used by loadAvailableDoctors frontend function)
+router.get('/doctors', async (req, res) => {
+    try {
+        const doctorsData = await User.find({ role: 'doctor' });
+        res.status(200).json(doctorsData);
+    } catch (err) {
+        res.status(500).json({ message: "Query failed", error: err.message });
     }
 });
 
