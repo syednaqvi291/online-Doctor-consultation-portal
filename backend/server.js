@@ -8,15 +8,18 @@ const app = express();
 // Connect to Database
 connectDB();
 
-// Global Middlewares
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Main Root API Gateways
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
+// Routes Integration
+const authRoutes = require('./routes/authRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
-// ==================== FEATURE: AI DISEASE PREDICTOR ====================
+app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+
+// AI Symptom Route
 app.post('/api/ai/predict', async (req, res) => {
     try {
         const { symptoms } = req.body;
@@ -29,10 +32,10 @@ app.post('/api/ai/predict', async (req, res) => {
     }
 });
 
-// Serverless mapping fallback for local development if run directly
+// Local dev support
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Local development server running on port ${PORT}`));
+    app.listen(PORT, () => console.log(`Local server running on port ${PORT}`));
 }
 
-module.exports = app; // This is what Vercel needs to handle serverless requests flawlessly
+module.exports = app;
