@@ -1,10 +1,10 @@
-// Automatically handles local development port vs live Vercel URL production container
+// Local dev vs Live Vercel server configuration container base route switch
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
 // ==================== SCREEN TOGGLE UTILITY ====================
-// Isme koi innerText ya classList crash nahi hai, yeh simple aur safe element display switcher hai
+// Purely robust error proof display controller that does not touch layouts or titles
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -17,23 +17,27 @@ function toggleAuth() {
             loginSec.style.display = 'none';
             registerSec.style.display = 'block';
         }
+    } else {
+        // Fallback strategy context if elements exist directly without custom container wrappers
+        const containers = document.querySelectorAll('.auth-container, [id*="Section"]');
+        containers.forEach(el => el.classList.toggle('hidden'));
     }
 }
 
 // ==================== REGISTRATION PIPELINE ====================
 async function registerUser() {
-    // Inputs reading with strict selectors and fallback placeholder mapping
+    // Read data using explicit IDs matching configuration arrays
     let fullName = document.getElementById('regFullName')?.value?.trim();
     let email = document.getElementById('regEmail')?.value?.trim();
     let password = document.getElementById('regPassword')?.value?.trim();
     let role = document.getElementById('regRole')?.value || 'Patient';
 
-    // Fallback strategy: Agar kisi vajah se IDs mismatch hain, toh querySelector placeholder se data utha lega
-    if (!fullName) fullName = document.querySelector('input[placeholder*="name"]')?.value?.trim();
-    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
-    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
+    // Fallback logic context: If IDs don't match, grab data by looking at placeholders directly
+    if (!fullName) fullName = document.querySelector('#registerSection input[type="text"], input[placeholder*="name"]')?.value?.trim();
+    if (!email) email = document.querySelector('#registerSection input[type="email"], input[placeholder*="email"]')?.value?.trim();
+    if (!password) password = document.querySelector('#registerSection input[type="password"], input[placeholder*="password"]')?.value?.trim();
 
-    console.log("Captured Registry Trace:", { fullName, email, password, role });
+    console.log("Safe Pipeline Intercept Capture:", { fullName, email, password, role });
 
     if (!fullName || !email || !password) {
         alert("Please fill all fields");
@@ -53,8 +57,8 @@ async function registerUser() {
             toggleAuth();
         }
     } catch (error) {
-        console.error("Backend Registry Crash Context:", error);
-        alert(error.response?.data?.message || "Registration Pipeline Fault - Server Error");
+        console.error("Backend Register Interface Error:", error);
+        alert(error.response?.data?.message || "Registration Pipeline Fault");
     }
 }
 
@@ -63,8 +67,8 @@ async function loginUser() {
     let email = document.getElementById('loginEmail')?.value?.trim();
     let password = document.getElementById('loginPassword')?.value?.trim();
 
-    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
-    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
+    if (!email) email = document.querySelector('#loginSection input[type="email"]')?.value?.trim();
+    if (!password) password = document.querySelector('#loginSection input[type="password"]')?.value?.trim();
 
     if (!email || !password) {
         alert("Please fill all fields");
@@ -77,19 +81,17 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Redirect based on user dashboard mapping context
             window.location.href = response.data.user.role === 'Doctor' 
                 ? 'doctor-dashboard.html' 
                 : 'patient-dashboard.html';
         }
     } catch (error) {
-        console.error("Login Router Fault:", error);
+        console.error("Authentication router check failed:", error);
         alert(error.response?.data?.message || "Invalid email or password.");
     }
 }
 
 // ==================== SERVERLESS CONSULTATION LAUNCHER ====================
-// WebRTC alternative framework using secure Jitsi infrastructure channel
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
@@ -100,5 +102,4 @@ function startDoctorConsultation(appointmentId) {
         lang: "en"
     };
     new JitsiMeetExternalAPI(domain, options);
-    console.log("Serverless safe live frame injected successfully.");
 }
