@@ -4,8 +4,7 @@
  * ============================================================================
  * Handles UI interactions, role toggles, and client-side form validation.*/
  // Backend URL matching your server.js
-const API_URL = "http://127.0.0.1:5000/api/user";
-
+const API_URL = "/api/user";
 // --- LOGIN FUNCTION ---
 async function loginUser() {
     const email = document.getElementById('loginEmail').value;
