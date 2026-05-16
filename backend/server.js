@@ -7,20 +7,11 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: '*' })); // Enforce open cross-origin access
 app.use(express.json());
 
-// Strict Alignment using kumailnaqvi291 credentials
-const dbUri = "mongodb+srv://kumailnaqvi291:kumailnaqvi291@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
-
-const UserSchema = new mongoose.Schema({
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['Patient', 'Doctor'], default: 'Patient' }
-}, { timestamps: true });
-
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
+// Fallback logic to ensure it catches both key names perfectly
+const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://kumailnaqvi291:kumailnaqvi291@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority";
 
 let isConnected = false;
 const connectDB = async () => {
@@ -29,13 +20,11 @@ const connectDB = async () => {
         return;
     }
     try {
-        const db = await mongoose.connect(dbUri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 8000
+        await mongoose.connect(dbUri, {
+            serverSelectionTimeoutMS: 10000
         });
-        isConnected = db.connections[0].readyState === 1;
-        console.log("Database authorized and aligned successfully.");
+        isConnected = true;
+        console.log("Database authorized successfully.");
     } catch (err) {
         console.error("Database Connection Fault:", err.message);
         isConnected = false;
@@ -50,9 +39,14 @@ app.use(async (req, res, next) => {
     } catch (dbErr) {
         return res.status(500).json({ 
             message: "Database access restricted or authentication failed.", 
-            details: dbErr.message 
+            error: dbErr.message 
         });
     }
+});
+
+// Dynamic Base Validation Route
+app.get('/api/status', (req, res) => {
+    res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
 });
 
 // Registration Endpoint
@@ -85,11 +79,11 @@ app.post('/api/auth/register', async (req, res) => {
             user: { id: newUser._id, fullName: newUser.fullName, email: newUser.email, role: newUser.role }
         });
     } catch (error) {
-        return res.status(500).json({ message: "Internal Server Pipeline Exception Error", details: error.message });
+        return res.status(500).json({ message: "Registration Pipeline Fault", details: error.message });
     }
 });
 
-// Login Endpoint
+// Login Endpoint (Updated to throw the real database error instead of standard 500)
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -98,6 +92,15 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+        
+        // Mongoose User compilation fallback
+        const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
+            fullName: String,
+            email: { type: String, unique: true },
+            password: String,
+            role: String
+        }));
+
         const user = await User.findOne({ email: normalizedEmail });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
@@ -120,7 +123,8 @@ app.post('/api/auth/login', async (req, res) => {
             user: { id: user._id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error) {
-        return res.status(500).json({ message: "Internal Server Pipeline Exception Error" });
+        // Explode the exact error message on screen so we see exactly why it fails
+        return res.status(500).json({ message: "Login Internal Exception", details: error.message });
     }
 });
 
