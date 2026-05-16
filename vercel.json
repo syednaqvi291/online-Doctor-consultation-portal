@@ -3,25 +3,12 @@
   "builds": [
     {
       "src": "backend/server.js",
-      "use": "@vercel/node",
-      "config": { "includeFiles": "backend/**" }
-    },
-    {
-      "src": "careconnect/**",
-      "use": "@vercel/static"
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/auth/(.*)",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/api/appointments/(.*)",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/api/ai/(.*)",
+      "src": "/api/(.*)",
       "dest": "backend/server.js"
     },
     {

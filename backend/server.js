@@ -1,25 +1,39 @@
 require('dotenv').config(); 
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 
 const app = express();
-
-// Initialize MongoDB Connection Protocol
-connectDB();
 
 app.use(cors());
 app.use(express.json());
 
-// Strict explicit schema registration to survive lambda containers
-require('./models/User');
-require('./models/Appointment');
+// Strict explicit schema registration context for Lambda triggers
+if (!mongoose.models.User) require('./models/User');
+if (!mongoose.models.Appointment) require('./models/Appointment');
 
-// Mount API Route handlers
+// Database Gateway connection proxy handler
+const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) return;
+    try {
+        await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI);
+        console.log("MongoDB Database connected smoothly.");
+    } catch (err) {
+        console.error("Database connection fault context:", err.message);
+    }
+};
+
+// Global Middleware to force database connection per instance fetch
+app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+});
+
+// Mounted Router Proxy Endpoints
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-// ==================== MACHINE LEARNING PREDICTION FEATURE ====================
+// ==================== MACHINE LEARNING PREDICTION ENGINE ====================
 app.post('/api/ai/predict', async (req, res) => {
     try {
         const { symptoms } = req.body;
@@ -32,11 +46,10 @@ app.post('/api/ai/predict', async (req, res) => {
     }
 });
 
-// Port runtime selector engine
+// Environment Runtime Server Execution
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Comprehensive feature cluster live locally on port ${PORT}`));
+    app.listen(PORT, () => console.log(`Development pipeline live on port ${PORT}`));
 } else {
-    // Export module safely to adapt perfectly with Vercel serverless platform
     module.exports = app;
 }
