@@ -7,11 +7,22 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
-app.use(cors({ origin: '*' })); // Enforce open cross-origin access
+app.use(cors({ origin: '*' })); // Pure dynamic access permission
 app.use(express.json());
 
-// Fallback logic to ensure it catches both key names perfectly
+// Force checks both variable fallbacks to ensure connection maps successfully
 const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://kumailnaqvi291:kumailnaqvi291@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority";
+
+// Enforce Mongoose Inline Schema compilation setup
+const schemaOptions = { timestamps: true };
+const userSchemaStructure = new mongoose.Schema({
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ['Patient', 'Doctor'], default: 'Patient' }
+}, schemaOptions);
+
+const User = mongoose.models.User || mongoose.model('User', userSchemaStructure);
 
 let isConnected = false;
 const connectDB = async () => {
@@ -21,12 +32,13 @@ const connectDB = async () => {
     }
     try {
         await mongoose.connect(dbUri, {
-            serverSelectionTimeoutMS: 10000
+            serverSelectionTimeoutMS: 10000,
+            connectTimeoutMS: 10000
         });
         isConnected = true;
-        console.log("Database authorized successfully.");
+        console.log("Database authorized and synchronized.");
     } catch (err) {
-        console.error("Database Connection Fault:", err.message);
+        console.error("Database Auth Failure:", err.message);
         isConnected = false;
         throw err;
     }
@@ -39,14 +51,14 @@ app.use(async (req, res, next) => {
     } catch (dbErr) {
         return res.status(500).json({ 
             message: "Database access restricted or authentication failed.", 
-            error: dbErr.message 
+            details: dbErr.message 
         });
     }
 });
 
-// Dynamic Base Validation Route
+// Test Connection Pipeline Route
 app.get('/api/status', (req, res) => {
-    res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
+    res.status(200).json({ status: "online", dbConnected: isConnected });
 });
 
 // Registration Endpoint
@@ -70,7 +82,7 @@ app.post('/api/auth/register', async (req, res) => {
             fullName: fullName.trim(),
             email: normalizedEmail,
             password: hashedPassword,
-            role
+            role: role || 'Patient'
         });
 
         return res.status(201).json({
@@ -79,11 +91,11 @@ app.post('/api/auth/register', async (req, res) => {
             user: { id: newUser._id, fullName: newUser.fullName, email: newUser.email, role: newUser.role }
         });
     } catch (error) {
-        return res.status(500).json({ message: "Registration Pipeline Fault", details: error.message });
+        return res.status(500).json({ message: "Registration Pipeline Fault", error: error.message });
     }
 });
 
-// Login Endpoint (Updated to throw the real database error instead of standard 500)
+// Login Endpoint (Surfaces exact underlying exception message)
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -92,15 +104,6 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        
-        // Mongoose User compilation fallback
-        const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-            fullName: String,
-            email: { type: String, unique: true },
-            password: String,
-            role: String
-        }));
-
         const user = await User.findOne({ email: normalizedEmail });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
@@ -123,7 +126,7 @@ app.post('/api/auth/login', async (req, res) => {
             user: { id: user._id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error) {
-        // Explode the exact error message on screen so we see exactly why it fails
+        // Surfaces the exact failure to console instead of a generic string block
         return res.status(500).json({ message: "Login Internal Exception", details: error.message });
     }
 });
