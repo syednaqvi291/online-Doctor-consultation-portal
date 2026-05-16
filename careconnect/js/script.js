@@ -2,7 +2,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// Screen shifting engine logic
+// Clean form layout switcher
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -18,7 +18,7 @@ function toggleAuth() {
     }
 }
 
-// User Registration Handler
+// Complete Registration Trigger Function
 async function registerUser() {
     const fullName = document.getElementById('regFullName')?.value?.trim();
     const email = document.getElementById('regEmail')?.value?.trim();
@@ -39,15 +39,15 @@ async function registerUser() {
         });
 
         if (response.data.success || response.data) {
-            alert("Registration successful! Switching to login...");
+            alert("Registration successful! Redirecting to login...");
             toggleAuth();
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Account registration failed.");
+        alert(error.response?.data?.message || "Account creation failed or server down.");
     }
 }
 
-// User Login Handler
+// Complete Login Trigger Function
 async function loginUser() {
     const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value?.trim();
@@ -72,7 +72,7 @@ async function loginUser() {
     }
 }
 
-// Fallback Serverless Consultation Framework Launcher
+// Serverless Consultation Framework Launcher
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
