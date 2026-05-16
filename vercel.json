@@ -16,6 +16,10 @@
       "dest": "backend/server.js"
     },
     {
+      "src": "/socket.io/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "careconnect/$1"
     }
