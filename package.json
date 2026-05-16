@@ -1,7 +1,7 @@
 {
   "name": "online-doctor-consultation-portal-root",
   "version": "1.0.0",
-  "description": "Production Root Engine for Vercel Deployment",
+  "description": "Production setup for Kumail's CareConnect Portal",
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js"
