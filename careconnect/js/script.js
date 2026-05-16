@@ -1,24 +1,39 @@
+// Automatically handles local development port vs live Vercel URL production container
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// Error-proof structural form section toggle switcher
+// ==================== SCREEN TOGGLE UTILITY ====================
+// Isme koi innerText ya classList crash nahi hai, yeh simple aur safe element display switcher hai
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
     
     if (loginSec && registerSec) {
-        loginSec.classList.toggle('hidden');
-        registerSec.classList.toggle('hidden');
+        if (loginSec.style.display === 'none') {
+            loginSec.style.display = 'block';
+            registerSec.style.display = 'none';
+        } else {
+            loginSec.style.display = 'none';
+            registerSec.style.display = 'block';
+        }
     }
 }
 
-// User Registration Core Router
+// ==================== REGISTRATION PIPELINE ====================
 async function registerUser() {
-    const fullName = document.getElementById('regFullName')?.value?.trim();
-    const email = document.getElementById('regEmail')?.value?.trim();
-    const password = document.getElementById('regPassword')?.value?.trim();
-    const role = document.getElementById('regRole')?.value || 'Patient';
+    // Inputs reading with strict selectors and fallback placeholder mapping
+    let fullName = document.getElementById('regFullName')?.value?.trim();
+    let email = document.getElementById('regEmail')?.value?.trim();
+    let password = document.getElementById('regPassword')?.value?.trim();
+    let role = document.getElementById('regRole')?.value || 'Patient';
+
+    // Fallback strategy: Agar kisi vajah se IDs mismatch hain, toh querySelector placeholder se data utha lega
+    if (!fullName) fullName = document.querySelector('input[placeholder*="name"]')?.value?.trim();
+    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
+    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
+
+    console.log("Captured Registry Trace:", { fullName, email, password, role });
 
     if (!fullName || !email || !password) {
         alert("Please fill all fields");
@@ -38,14 +53,18 @@ async function registerUser() {
             toggleAuth();
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Account creation failed.");
+        console.error("Backend Registry Crash Context:", error);
+        alert(error.response?.data?.message || "Registration Pipeline Fault - Server Error");
     }
 }
 
-// User Login Core Router
+// ==================== LOGIN PIPELINE ====================
 async function loginUser() {
-    const email = document.getElementById('loginEmail')?.value?.trim();
-    const password = document.getElementById('loginPassword')?.value?.trim();
+    let email = document.getElementById('loginEmail')?.value?.trim();
+    let password = document.getElementById('loginPassword')?.value?.trim();
+
+    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
+    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
 
     if (!email || !password) {
         alert("Please fill all fields");
@@ -58,16 +77,19 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
+            // Redirect based on user dashboard mapping context
             window.location.href = response.data.user.role === 'Doctor' 
                 ? 'doctor-dashboard.html' 
                 : 'patient-dashboard.html';
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Invalid credentials.");
+        console.error("Login Router Fault:", error);
+        alert(error.response?.data?.message || "Invalid email or password.");
     }
 }
 
-// Serverless Consultation Frame Loader
+// ==================== SERVERLESS CONSULTATION LAUNCHER ====================
+// WebRTC alternative framework using secure Jitsi infrastructure channel
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
@@ -78,4 +100,5 @@ function startDoctorConsultation(appointmentId) {
         lang: "en"
     };
     new JitsiMeetExternalAPI(domain, options);
+    console.log("Serverless safe live frame injected successfully.");
 }

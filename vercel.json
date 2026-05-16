@@ -4,12 +4,24 @@
     {
       "src": "backend/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "careconnect/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "backend/server.js"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "careconnect/js/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "careconnect/css/$1"
     },
     {
       "src": "/(.*)",
