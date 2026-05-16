@@ -24,12 +24,15 @@ const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 let isConnected = false;
 const connectDB = async () => {
-    if (isConnected && mongoose.connection.readyState === 1) return;
+    if (mongoose.connection.readyState === 1) {
+        isConnected = true;
+        return;
+    }
     try {
         const db = await mongoose.connect(dbUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 10000
+            serverSelectionTimeoutMS: 5000 // Prevents serverless lambda from freezing
         });
         isConnected = db.connections[0].readyState >= 1;
         console.log("Database secured successfully.");
@@ -40,13 +43,16 @@ const connectDB = async () => {
     }
 };
 
-// Middleware to ensure database is connected before handling requests on serverless
+// Middleware to secure serverless database state pipeline
 app.use(async (req, res, next) => {
     try {
         await connectDB();
         next();
     } catch (dbErr) {
-        return res.status(500).json({ message: "Database access restricted or IP not whitelisted.", details: dbErr.message });
+        return res.status(500).json({ 
+            message: "Database access restricted or IP not whitelisted.", 
+            details: dbErr.message 
+        });
     }
 });
 
@@ -125,5 +131,4 @@ app.get('/api/status', (req, res) => {
     res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
 });
 
-// Export the app for Vercel Serverless Function architecture
 module.exports = app;
