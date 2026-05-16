@@ -2,23 +2,18 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// Clean form layout switcher
+// Error-proof structural form section toggle switcher
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
     
     if (loginSec && registerSec) {
-        if (loginSec.style.display === 'none') {
-            loginSec.style.display = 'block';
-            registerSec.style.display = 'none';
-        } else {
-            loginSec.style.display = 'none';
-            registerSec.style.display = 'block';
-        }
+        loginSec.classList.toggle('hidden');
+        registerSec.classList.toggle('hidden');
     }
 }
 
-// Complete Registration Trigger Function
+// User Registration Core Router
 async function registerUser() {
     const fullName = document.getElementById('regFullName')?.value?.trim();
     const email = document.getElementById('regEmail')?.value?.trim();
@@ -39,15 +34,15 @@ async function registerUser() {
         });
 
         if (response.data.success || response.data) {
-            alert("Registration successful! Redirecting to login...");
+            alert("Registration successful! Switching to login...");
             toggleAuth();
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Account creation failed or server down.");
+        alert(error.response?.data?.message || "Account creation failed.");
     }
 }
 
-// Complete Login Trigger Function
+// User Login Core Router
 async function loginUser() {
     const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value?.trim();
@@ -72,7 +67,7 @@ async function loginUser() {
     }
 }
 
-// Serverless Consultation Framework Launcher
+// Serverless Consultation Frame Loader
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
