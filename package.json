@@ -1,0 +1,12 @@
+{
+  "name": "online-doctor-consultation-portal-root",
+  "version": "1.0.0",
+  "description": "Root configuration for Vercel deployment",
+  "main": "backend/server.js",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.3.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}
