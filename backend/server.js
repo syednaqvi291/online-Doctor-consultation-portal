@@ -10,8 +10,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Main Dynamic URI Line
-const dbUri = "mongodb+srv://kumailnaqvi292:kumailnaqvi292@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
+// Strict Alignment using kumailnaqvi291 credentials
+const dbUri = "mongodb+srv://kumailnaqvi291:kumailnaqvi291@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
 
 const UserSchema = new mongoose.Schema({
     fullName: { type: String, required: true },
@@ -23,21 +23,19 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 let isConnected = false;
-
 const connectDB = async () => {
-    if (isConnected && mongoose.connection.readyState === 1) {
+    if (mongoose.connection.readyState === 1) {
+        isConnected = true;
         return;
     }
     try {
-        mongoose.set('strictQuery', true);
         const db = await mongoose.connect(dbUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 10000, // Increased to allow dynamic whitelist propagation
-            socketTimeoutMS: 45000
+            serverSelectionTimeoutMS: 8000
         });
         isConnected = db.connections[0].readyState === 1;
-        console.log("Database bridge established successfully.");
+        console.log("Database authorized and aligned successfully.");
     } catch (err) {
         console.error("Database Connection Fault:", err.message);
         isConnected = false;
@@ -45,20 +43,19 @@ const connectDB = async () => {
     }
 };
 
-// Error Shielding Pipeline Middleware
 app.use(async (req, res, next) => {
     try {
         await connectDB();
         next();
     } catch (dbErr) {
         return res.status(500).json({ 
-            message: "Database access restricted or IP not whitelisted.", 
+            message: "Database access restricted or authentication failed.", 
             details: dbErr.message 
         });
     }
 });
 
-// Registration API
+// Registration Endpoint
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
@@ -92,7 +89,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// Login API
+// Login Endpoint
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
