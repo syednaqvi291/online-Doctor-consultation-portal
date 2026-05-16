@@ -16,10 +16,6 @@
       "dest": "backend/server.js"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "careconnect/favicon.ico"
-    },
-    {
       "src": "/(.*)",
       "dest": "careconnect/$1"
     }

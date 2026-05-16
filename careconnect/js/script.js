@@ -3,7 +3,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// ==================== VISUAL TOGGLE ENGINE (CRASH-PROOF) ====================
+// Visual Auth Toggle Engine
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -23,7 +23,7 @@ function toggleAuth() {
     }
 }
 
-// ==================== REGISTRATION PIPELINE ====================
+// User Registration Handler
 async function registerUser() {
     const fullName = document.getElementById('regFullName')?.value?.trim();
     const email = document.getElementById('regEmail')?.value?.trim();
@@ -53,7 +53,7 @@ async function registerUser() {
     }
 }
 
-// ==================== LOGIN PIPELINE ====================
+// User Login Handler
 async function loginUser() {
     const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value?.trim();
@@ -69,7 +69,7 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Production-grade absolute path redirection mapping
+            // Absolute client-side path handling
             const targetPage = response.data.user.role === 'Doctor' 
                 ? '/doctor-dashboard.html' 
                 : '/patient-dashboard.html';
@@ -82,7 +82,7 @@ async function loginUser() {
     }
 }
 
-// ==================== WEBRTC ENGINE LAUNCHER ====================
+// WebRTC Engine Launcher
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
