@@ -2,7 +2,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// ==================== SCREEN TOGGLE UTILITY ====================
+// Screen shifting engine logic
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -18,7 +18,7 @@ function toggleAuth() {
     }
 }
 
-// ==================== REGISTRATION PIPELINE ====================
+// User Registration Handler
 async function registerUser() {
     const fullName = document.getElementById('regFullName')?.value?.trim();
     const email = document.getElementById('regEmail')?.value?.trim();
@@ -43,11 +43,11 @@ async function registerUser() {
             toggleAuth();
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Account creation failed or server unreachable.");
+        alert(error.response?.data?.message || "Account registration failed.");
     }
 }
 
-// ==================== LOGIN PIPELINE ====================
+// User Login Handler
 async function loginUser() {
     const email = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value?.trim();
@@ -68,11 +68,11 @@ async function loginUser() {
                 : 'patient-dashboard.html';
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Invalid email or password.");
+        alert(error.response?.data?.message || "Invalid credentials.");
     }
 }
 
-// Jitsi Call Launcher Hook
+// Fallback Serverless Consultation Framework Launcher
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
