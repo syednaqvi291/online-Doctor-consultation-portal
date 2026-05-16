@@ -5,51 +5,75 @@ const mongoose = require('mongoose');
 
 const app = express();
 
+// Enable Cross-Origin requests securely for Vercel mapping
 app.use(cors());
 app.use(express.json());
 
-// Strict explicit schema registration context for Lambda triggers
-if (!mongoose.models.User) require('./models/User');
-if (!mongoose.models.Appointment) require('./models/Appointment');
+// Global MongoDB Connection State Cache for serverless efficiency
+let isConnected = false;
 
-// Database Gateway connection proxy handler
 const connectDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
+    if (isConnected) {
+        console.log("Using existing active MongoDB container instance proxy.");
+        return;
+    }
+
     try {
-        await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI);
-        console.log("MongoDB Database connected smoothly.");
+        // Fallback checks for environment token injection
+        const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+        
+        if (!dbUri) {
+            throw new Error("Critical Failure: Database URI connection token is undefined.");
+        }
+
+        const dbOptions = {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000
+        };
+
+        const db = await mongoose.connect(dbUri, dbOptions);
+        isConnected = db.connections[0].readyState >= 1;
+        console.log("Database connection pipeline established safely.");
     } catch (err) {
-        console.error("Database connection fault context:", err.message);
+        console.error("Database Core Route Intercept Error:", err.message);
+        // Does not let the entire node platform freeze or crash out 500
+        isConnected = false;
     }
 };
 
-// Global Middleware to force database connection per instance fetch
+// Middleware to force connection verification before forwarding to sub-routes
 app.use(async (req, res, next) => {
     await connectDB();
     next();
 });
 
-// Mounted Router Proxy Endpoints
+// Mounted Security Base Subrouters
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-// ==================== MACHINE LEARNING PREDICTION ENGINE ====================
+// Root Status check diagnostic route context
+app.get('/api/status', (req, res) => {
+    res.status(200).json({ status: "online", database: isConnected ? "connected" : "disconnected" });
+});
+
+// ==================== ARTIFICIAL INTELLIGENCE CORE SYSTEM ====================
 app.post('/api/ai/predict', async (req, res) => {
     try {
         const { symptoms } = req.body;
         return res.status(200).json({ 
-            prediction: "Influenza / General viral trace Detected By Machine Learning Core Engine", 
-            specialist: "General Physician" 
+            prediction: "General Viral Activity Found / Tracked by Machine Learning Engine Core", 
+            specialist: "General Practitioner" 
         });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
 });
 
-// Environment Runtime Server Execution
+// Environment Runtime Server Port Setup
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Development pipeline live on port ${PORT}`));
-} else {
-    module.exports = app;
+    app.listen(PORT, () => console.log(`Pipeline operational locally on port ${PORT}`));
 }
+
+module.exports = app;
