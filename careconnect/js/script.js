@@ -3,14 +3,12 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// ==================== FAIL-SAFE SCREEN TOGGLE ====================
-// Agar aapke HTML me class badal rahi thi ya style block ho raha tha, yeh dono tarike handle karega
+// ==================== VISUAL TOGGLE ENGINE (CRASH-PROOF) ====================
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
     
     if (loginSec && registerSec) {
-        // Fallback check: Agar styles exist nahi karti to direct toggle karega
         if (loginSec.style.display === 'none' || loginSec.classList.contains('hidden')) {
             loginSec.style.display = 'block';
             loginSec.classList.remove('hidden');
@@ -25,18 +23,12 @@ function toggleAuth() {
     }
 }
 
-// ==================== REGISTRATION ENGINE ====================
+// ==================== REGISTRATION PIPELINE ====================
 async function registerUser() {
-    // 1. Direct ID se element reading
-    let fullName = document.getElementById('regFullName')?.value?.trim();
-    let email = document.getElementById('regEmail')?.value?.trim();
-    let password = document.getElementById('regPassword')?.value?.trim();
-    let role = document.getElementById('regRole')?.value || 'Patient';
-
-    // 2. Fallback: Agar aapke HTML me different IDs hain, to attributes se fetch karega
-    if (!fullName) fullName = document.querySelector('input[placeholder*="name"], #name')?.value?.trim();
-    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
-    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
+    const fullName = document.getElementById('regFullName')?.value?.trim();
+    const email = document.getElementById('regEmail')?.value?.trim();
+    const password = document.getElementById('regPassword')?.value?.trim();
+    const role = document.getElementById('regRole')?.value || 'Patient';
 
     if (!fullName || !email || !password) {
         alert("Please fill all fields");
@@ -51,22 +43,20 @@ async function registerUser() {
             role
         });
 
-        if (response.data.success || response.data) {
+        if (response.data) {
             alert("Registration successful! Switching to login...");
             toggleAuth();
         }
     } catch (error) {
-        alert(error.response?.data?.message || "Registration Pipeline Fault - Backend connection failed.");
+        console.error("Registration Frontend Error:", error);
+        alert(error.response?.data?.message || "Registration Pipeline Fault - Backend Connection Error.");
     }
 }
 
-// ==================== LOGIN ENGINE ====================
+// ==================== LOGIN PIPELINE ====================
 async function loginUser() {
-    let email = document.getElementById('loginEmail')?.value?.trim();
-    let password = document.getElementById('loginPassword')?.value?.trim();
-
-    if (!email) email = document.querySelector('#loginSection input[type="email"]')?.value?.trim();
-    if (!password) password = document.querySelector('#loginSection input[type="password"]')?.value?.trim();
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    const password = document.getElementById('loginPassword')?.value?.trim();
 
     if (!email || !password) {
         alert("Please fill all fields");
@@ -79,16 +69,20 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            window.location.href = response.data.user.role === 'Doctor' 
-                ? 'doctor-dashboard.html' 
-                : 'patient-dashboard.html';
+            // Production-grade absolute path redirection mapping
+            const targetPage = response.data.user.role === 'Doctor' 
+                ? '/doctor-dashboard.html' 
+                : '/patient-dashboard.html';
+                
+            window.location.href = window.location.origin + targetPage;
         }
     } catch (error) {
+        console.error("Login Frontend Error:", error);
         alert(error.response?.data?.message || "Invalid credentials.");
     }
 }
 
-// ==================== WEBRTC INFRASTRUCTURE LAUNCHER ====================
+// ==================== WEBRTC ENGINE LAUNCHER ====================
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
