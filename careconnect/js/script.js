@@ -1,25 +1,14 @@
-/**
- * ============================================================================
- * Online Doctor Consultation Portal - Core JavaScript
- * ============================================================================
- * Handles UI interactions, role toggles, and client-side form validation.*/
- // Backend URL matching your server.js
-// ============================================================
-// Universal Base Route for API Integration
-const API_URL = "/api";
-const socket = io(); // Automatically hooks into your live Vercel/Render pipeline
+// Strict Relative Path to sync with Vercel configuration
+const API_URL = window.location.origin + "/api";
+const socket = io(window.location.origin); 
 
-// Global parameters for WebRTC Video Calling
+// Global variables for WebRTC Video
 let localStream;
 let remoteStream;
 let peerConnection;
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-socket.on('connect', () => {
-    console.log('Connected to secure real-time communication server.');
-});
-
-// WebRTC Signaling Engine for Live Video Calls
+// WebRTC Signaling Engine
 socket.on('message', async (message) => {
     try {
         if (message.type === 'offer') {
@@ -33,11 +22,11 @@ socket.on('message', async (message) => {
             await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
         }
     } catch (err) {
-        console.error("WebRTC System Trace Error:", err);
+        console.error("WebRTC Error:", err);
     }
 });
 
-// ==================== FEATURE 1 & 2: LOGIN & REGISTER ====================
+// ==================== LOGIN & REGISTER ====================
 async function loginUser(event) {
     if(event) event.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -74,7 +63,7 @@ async function registerUser(event) {
     }
 }
 
-// ==================== FEATURE 3: DOCTOR FETCH & DISCOVERY ====================
+// ==================== DOCTOR FETCH & DISCOVERY ====================
 function loadAvailableDoctors() {
     fetch(`${API_URL}/auth/doctors`)
         .then(response => response.json())
@@ -93,14 +82,14 @@ function loadAvailableDoctors() {
                 });
             }
         })
-        .catch(err => console.error("Error pulling live doctor files:", err));
+        .catch(err => console.error("Error pulling live doctor data:", err));
 }
 
 function navigateToAppointment(doctorId) {
     window.location.href = `book-appointment.html?doctorId=${doctorId}`;
 }
 
-// ==================== FEATURE 4: APPOINTMENT SCHEDULING ====================
+// ==================== APPOINTMENT SCHEDULING ====================
 async function handleAppointmentBooking(event) {
     if(event) event.preventDefault();
     const doctorId = document.getElementById('doctorId').value;
@@ -117,30 +106,29 @@ async function handleAppointmentBooking(event) {
             alert("Booking failed: " + res.data.message);
         }
     } catch (err) {
-        console.error(err);
-        alert("Error mapping database appointment slot.");
+        alert("Error booking appointment slot.");
     }
 }
 
-// ==================== FEATURE 5: AI DISEASE PREDICTOR ====================
+// ==================== AI DISEASE PREDICTOR ====================
 async function checkSymptomsWithAI(event) {
     if(event) event.preventDefault();
     const symptomsInput = document.getElementById('symptomsText').value;
     const resultDiv = document.getElementById('aiResultDisplay');
 
     try {
-        if(resultDiv) resultDiv.innerText = "Analyzing symptoms with AI model...";
+        if(resultDiv) resultDiv.innerText = "Analyzing symptoms with AI Model...";
         const res = await axios.post(`${API_URL}/ai/predict`, { symptoms: symptomsInput });
         if(resultDiv) {
             resultDiv.innerHTML = `<strong>Predicted Condition:</strong> ${res.data.prediction}<br>
                                    <strong>Recommended Specialist:</strong> ${res.data.specialist}`;
         }
     } catch (err) {
-        if(resultDiv) resultDiv.innerText = "AI System offline. Please consult a doctor directly.";
+        if(resultDiv) resultDiv.innerText = "AI Diagnostics system offline.";
     }
 }
 
-// Global Event Triggers Mapping to match your HTML IDs
+// Hooks matching your specific UI Layout IDs
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('doctor-list')) loadAvailableDoctors();
     
