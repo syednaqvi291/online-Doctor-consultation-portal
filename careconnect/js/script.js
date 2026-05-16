@@ -1,43 +1,42 @@
-// Local dev vs Live Vercel server configuration container base route switch
+// Automatically handles local development port vs live Vercel URL production container
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// ==================== SCREEN TOGGLE UTILITY ====================
-// Purely robust error proof display controller that does not touch layouts or titles
+// ==================== FAIL-SAFE SCREEN TOGGLE ====================
+// Agar aapke HTML me class badal rahi thi ya style block ho raha tha, yeh dono tarike handle karega
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
     
     if (loginSec && registerSec) {
-        if (loginSec.style.display === 'none') {
+        // Fallback check: Agar styles exist nahi karti to direct toggle karega
+        if (loginSec.style.display === 'none' || loginSec.classList.contains('hidden')) {
             loginSec.style.display = 'block';
+            loginSec.classList.remove('hidden');
             registerSec.style.display = 'none';
+            registerSec.classList.add('hidden');
         } else {
             loginSec.style.display = 'none';
+            loginSec.classList.add('hidden');
             registerSec.style.display = 'block';
+            registerSec.classList.remove('hidden');
         }
-    } else {
-        // Fallback strategy context if elements exist directly without custom container wrappers
-        const containers = document.querySelectorAll('.auth-container, [id*="Section"]');
-        containers.forEach(el => el.classList.toggle('hidden'));
     }
 }
 
-// ==================== REGISTRATION PIPELINE ====================
+// ==================== REGISTRATION ENGINE ====================
 async function registerUser() {
-    // Read data using explicit IDs matching configuration arrays
+    // 1. Direct ID se element reading
     let fullName = document.getElementById('regFullName')?.value?.trim();
     let email = document.getElementById('regEmail')?.value?.trim();
     let password = document.getElementById('regPassword')?.value?.trim();
     let role = document.getElementById('regRole')?.value || 'Patient';
 
-    // Fallback logic context: If IDs don't match, grab data by looking at placeholders directly
-    if (!fullName) fullName = document.querySelector('#registerSection input[type="text"], input[placeholder*="name"]')?.value?.trim();
-    if (!email) email = document.querySelector('#registerSection input[type="email"], input[placeholder*="email"]')?.value?.trim();
-    if (!password) password = document.querySelector('#registerSection input[type="password"], input[placeholder*="password"]')?.value?.trim();
-
-    console.log("Safe Pipeline Intercept Capture:", { fullName, email, password, role });
+    // 2. Fallback: Agar aapke HTML me different IDs hain, to attributes se fetch karega
+    if (!fullName) fullName = document.querySelector('input[placeholder*="name"], #name')?.value?.trim();
+    if (!email) email = document.querySelector('input[type="email"]')?.value?.trim();
+    if (!password) password = document.querySelector('input[type="password"]')?.value?.trim();
 
     if (!fullName || !email || !password) {
         alert("Please fill all fields");
@@ -57,12 +56,11 @@ async function registerUser() {
             toggleAuth();
         }
     } catch (error) {
-        console.error("Backend Register Interface Error:", error);
-        alert(error.response?.data?.message || "Registration Pipeline Fault");
+        alert(error.response?.data?.message || "Registration Pipeline Fault - Backend connection failed.");
     }
 }
 
-// ==================== LOGIN PIPELINE ====================
+// ==================== LOGIN ENGINE ====================
 async function loginUser() {
     let email = document.getElementById('loginEmail')?.value?.trim();
     let password = document.getElementById('loginPassword')?.value?.trim();
@@ -86,12 +84,11 @@ async function loginUser() {
                 : 'patient-dashboard.html';
         }
     } catch (error) {
-        console.error("Authentication router check failed:", error);
-        alert(error.response?.data?.message || "Invalid email or password.");
+        alert(error.response?.data?.message || "Invalid credentials.");
     }
 }
 
-// ==================== SERVERLESS CONSULTATION LAUNCHER ====================
+// ==================== WEBRTC INFRASTRUCTURE LAUNCHER ====================
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
