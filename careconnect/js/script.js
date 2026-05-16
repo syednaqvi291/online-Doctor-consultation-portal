@@ -1,9 +1,9 @@
-// Automatically handles local development port vs live Vercel URL production container
+// Dynamic mapping handling live runtime endpoints vs local environment containers
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
     : window.location.origin;
 
-// Visual Auth Toggle Engine
+// Visual Auth Toggle Engine (Keeps original styling intact)
 function toggleAuth() {
     const loginSec = document.getElementById('loginSection');
     const registerSec = document.getElementById('registerSection');
@@ -43,13 +43,15 @@ async function registerUser() {
             role
         });
 
-        if (response.data) {
+        if (response.data && response.data.success) {
             alert("Registration successful! Switching to login...");
             toggleAuth();
+        } else {
+            alert(response.data.message || "Registration encountered an unexpected issue.");
         }
     } catch (error) {
-        console.error("Registration Frontend Error:", error);
-        alert(error.response?.data?.message || "Registration Pipeline Fault - Backend Connection Error.");
+        console.error("Registration Frontend Log:", error);
+        alert(error.response?.data?.message || "Registration Pipeline Fault - Server Error.");
     }
 }
 
@@ -69,7 +71,7 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Absolute client-side path handling
+            // Production absolute path dashboard mapping execution
             const targetPage = response.data.user.role === 'Doctor' 
                 ? '/doctor-dashboard.html' 
                 : '/patient-dashboard.html';
@@ -77,7 +79,7 @@ async function loginUser() {
             window.location.href = window.location.origin + targetPage;
         }
     } catch (error) {
-        console.error("Login Frontend Error:", error);
+        console.error("Login Frontend Log:", error);
         alert(error.response?.data?.message || "Invalid credentials.");
     }
 }
