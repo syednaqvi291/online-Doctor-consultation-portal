@@ -12,9 +12,9 @@ router.post('/book', async (req, res) => {
             time
         });
         await freshLog.save();
-        res.status(201).json({ success: true, message: "Appointment linked inside database successfully!", data: freshLog });
+        res.status(201).json({ success: true, message: "Appointment entry compiled inside Atlas database", data: freshLog });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Database logging failed", error: err.message });
+        res.status(500).json({ success: false, message: "Database push failed", error: err.message });
     }
 });
 

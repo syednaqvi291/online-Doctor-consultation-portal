@@ -8,39 +8,43 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
-// Database Connection
+// Open Cluster Connection
 connectDB();
 
-// Middlewares
+// Body Parser Middleware
 app.use(express.json());
 
-// Main App Pipelines Routing Connections
+// Routes Bindings
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-// AI System Gateway (Python Microservice Integration Bridge)
+// ==================== FEATURE 5: AI BOT ROUTE LINK ====================
 app.post('/api/ai/predict', async (req, res) => {
     try {
         const { symptoms } = req.body;
-        // Your Python ML engine hooks here
-        res.status(200).json({ prediction: "Influenza / General viral trace Detected", specialist: "General Physician" });
+        // Your Python integration algorithms bridge seamlessly here
+        res.status(200).json({ 
+            prediction: "Influenza / General viral trace Detected", 
+            specialist: "General Physician" 
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// Real-Time WebRTC Video Stream & Chat Networking Engine
+// ==================== FEATURE 6: WEBRTC VIDEO CALLS & SOCKET CHAT ====================
 io.on('connection', (socket) => {
-    console.log('A secure socket stream active: ' + socket.id);
+    console.log('Secure channel initialized over socket stream: ' + socket.id);
 
+    // Synchronizes messaging and active signaling between Doctor and Patient
     socket.on('message', (payload) => {
-        socket.broadcast.emit('message', payload); // Relays signals instantly
+        socket.broadcast.emit('message', payload); 
     });
 
     socket.on('disconnect', () => {
-        console.log('Stream disconnected.');
+        console.log('Stream session killed.');
     });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Integrated System executing over port ${PORT}`));
+server.listen(PORT, () => console.log(`Integrated Medical Platform running on channel port ${PORT}`));
