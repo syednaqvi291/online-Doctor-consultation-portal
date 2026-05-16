@@ -4,35 +4,36 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     : window.location.origin;
 
 // ==================== WEBRTC ALTERNATIVE: JITSI VIDEO INFRASTRUCTURE ====================
-// Jab doctor ya patient dashboard me "Join Call" par click karein, tab isko trigger karna hai
 function startDoctorConsultation(appointmentId) {
     const domain = "8x8.vc"; 
     const options = {
         roomName: `CareConnect-SecureRoom-${appointmentId}`,
         width: "100%",
         height: 500,
-        parentNode: document.getElementById("meet"), // Dashboard layout me jahan video chalani hai wahan ye id wala div hona chahiye
+        parentNode: document.getElementById("meet"), 
         lang: "en",
         configOverwrite: {
             startWithAudioMuted: false,
             startWithVideoMuted: false
         }
     };
-    
-    // Bina design kharab kiye full screen layout me call open kar dega
     const api = new JitsiMeetExternalAPI(domain, options);
     console.log("Jitsi serverless live consultation frame ready.");
 }
 
 // ==================== REGISTRATION FEATURE ====================
 async function registerUser() {
-    const fullName = document.getElementById('regFullName')?.value;
-    const email = document.getElementById('regEmail')?.value;
-    const password = document.getElementById('regPassword')?.value;
-    const role = document.getElementById('regRole')?.value || 'Patient';
+    // Is code mein fallback tracking add kar di hai taaki agar id galti se short ya change ho, toh bhi data capture ho jaye
+    const fullName = document.getElementById('regFullName')?.value || document.getElementById('fullName')?.value || document.getElementById('name')?.value;
+    const email = document.getElementById('regEmail')?.value || document.getElementById('email')?.value;
+    const password = document.getElementById('regPassword')?.value || document.getElementById('password')?.value;
+    const role = document.getElementById('regRole')?.value || document.getElementById('role')?.value || 'Patient';
+
+    // Debugging terminal alert logic to check values inside console
+    console.log("Captured Sign-Up Trace:", { fullName, email, password, role });
 
     if (!fullName || !email || !password) {
-        alert("Please fill all fields");
+        alert("Form evaluation failed. Make sure your input IDs match 'regFullName', 'regEmail', and 'regPassword' in HTML.");
         return;
     }
 
@@ -46,7 +47,9 @@ async function registerUser() {
 
         if (response.data.success) {
             alert("Registration successful! Redirecting...");
-            toggleAuthMode(); // Purana layout screen function toggle karne ke liye
+            if (typeof toggleAuthMode === 'function') {
+                toggleAuthMode(); 
+            }
         } else {
             alert(response.data.message || "Registration trace rejected by server");
         }
@@ -58,8 +61,8 @@ async function registerUser() {
 
 // ==================== LOGIN FEATURE ====================
 async function loginUser() {
-    const email = document.getElementById('loginEmail')?.value;
-    const password = document.getElementById('loginPassword')?.value;
+    const email = document.getElementById('loginEmail')?.value || document.getElementById('email')?.value;
+    const password = document.getElementById('loginPassword')?.value || document.getElementById('password')?.value;
 
     if (!email || !password) {
         alert("Please provide credentials");
@@ -72,7 +75,6 @@ async function loginUser() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Route dashboard based on user role identity
             if (response.data.user.role === 'Doctor') {
                 window.location.href = 'doctor-dashboard.html';
             } else {
