@@ -10,10 +10,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Strict Cloud Database Cluster URI
+// Main Dynamic URI Line
 const dbUri = "mongodb+srv://kumailnaqvi292:kumailnaqvi292@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority&appName=Cluster0";
 
-// Schema Blueprint matching user credentials precisely
 const UserSchema = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -23,31 +22,30 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// Optimized Serverless Connection Cache Management
-let cachedDbConnection = null;
+let isConnected = false;
 
 const connectDB = async () => {
-    if (cachedDbConnection && mongoose.connection.readyState === 1) {
-        return cachedDbConnection;
+    if (isConnected && mongoose.connection.readyState === 1) {
+        return;
     }
-    
     try {
-        console.log("Initiating fresh database channel handshake...");
-        cachedDbConnection = await mongoose.connect(dbUri, {
+        mongoose.set('strictQuery', true);
+        const db = await mongoose.connect(dbUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 8000,
+            serverSelectionTimeoutMS: 10000, // Increased to allow dynamic whitelist propagation
             socketTimeoutMS: 45000
         });
-        return cachedDbConnection;
+        isConnected = db.connections[0].readyState === 1;
+        console.log("Database bridge established successfully.");
     } catch (err) {
         console.error("Database Connection Fault:", err.message);
-        cachedDbConnection = null;
+        isConnected = false;
         throw err;
     }
 };
 
-// Global Pipeline Execution Shield Middleware
+// Error Shielding Pipeline Middleware
 app.use(async (req, res, next) => {
     try {
         await connectDB();
@@ -60,7 +58,7 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Registration Endpoint Pipeline
+// Registration API
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
@@ -90,12 +88,11 @@ app.post('/api/auth/register', async (req, res) => {
             user: { id: newUser._id, fullName: newUser.fullName, email: newUser.email, role: newUser.role }
         });
     } catch (error) {
-        console.error("Internal Registration Failure:", error);
         return res.status(500).json({ message: "Internal Server Pipeline Exception Error", details: error.message });
     }
 });
 
-// Login Endpoint Pipeline
+// Login API
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -126,16 +123,8 @@ app.post('/api/auth/login', async (req, res) => {
             user: { id: user._id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error) {
-        console.error("Internal Login Failure:", error);
         return res.status(500).json({ message: "Internal Server Pipeline Exception Error" });
     }
-});
-
-app.get('/api/status', (req, res) => {
-    res.status(200).json({ 
-        status: "online", 
-        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" 
-    });
 });
 
 module.exports = app;
