@@ -4,12 +4,20 @@
     {
       "src": "backend/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "careconnect/(.*)",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "backend/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "careconnect/$1"
     }
   ]
 }
