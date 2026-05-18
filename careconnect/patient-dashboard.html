@@ -57,6 +57,7 @@
         
         .chat-container-box { background: #131c2e; border: 1px solid var(--border-color); border-radius: 12px; height: 220px; display: flex; flex-direction: column; overflow: hidden; }
         .chat-messages-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-messages-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .chat-bubble { max-width: 80%; padding: 10px 14px; font-size: 12px; border-radius: 12px; line-height: 1.4; }
         .chat-bubble.patient { background: var(--accent); color: #0f172a; align-self: flex-end; }
         .chat-bubble.doctor { background: var(--border-color); color: #fff; align-self: flex-start; }
@@ -218,10 +219,13 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const BACKEND_CORE = "http://localhost:5000/api";
+            // VERCEL DYNAMIC ROUTING CONFIGURATION ✅
+            const BACKEND_CORE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+                ? "http://localhost:5000/api" 
+                : `${window.location.origin}/api`;
+
             const token = localStorage.getItem("token");
             
-            // FIXED EXTRACTION HERE ✅
             let localName = localStorage.getItem("name") || "Patient User";
             document.getElementById("clientProfileName").innerText = localName;
             document.getElementById("welcomeUserHeading").innerText = `${localName}'s Dashboard`;
@@ -298,7 +302,6 @@
                 }
             });
 
-            // Live static elements fallback triggers
             document.getElementById("saveVitalsBtn").addEventListener("click", () => {
                 const bp = document.getElementById("vitalBP").value || "N/A";
                 const pulse = document.getElementById("vitalPulse").value || "N/A";
@@ -330,9 +333,6 @@
                 }
             });
 
-            // ==========================================
-            // LIVE CHAT LOGIC INTEGRATION (ADDED) ✅
-            // ==========================================
             const chatMessagesArea = document.getElementById("chatMessagesArea");
             const chatInputField = document.getElementById("chatInputField");
             const chatSendButton = document.getElementById("chatSendButton");
@@ -341,12 +341,10 @@
                 const textMessage = chatInputField.value.trim();
                 if (!textMessage) return;
 
-                // 1. UI par message instantly render karo
                 chatMessagesArea.innerHTML += `<div class="chat-bubble patient">${textMessage}</div>`;
                 chatInputField.value = "";
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
 
-                // 2. Backend API par sync karo (Bina baki functionality ko chhede)
                 try {
                     await axios.post(`${BACKEND_CORE}/chat`, {
                         appointmentId: currentActiveAppointmentId,
@@ -360,10 +358,7 @@
                 }
             };
 
-            // Trigger on Click
             chatSendButton.addEventListener("click", sendPatientChatMessage);
-
-            // Trigger on Enter Keypress
             chatInputField.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") {
                     sendPatientChatMessage();

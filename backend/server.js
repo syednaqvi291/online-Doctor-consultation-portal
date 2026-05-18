@@ -9,7 +9,8 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-const localDbUri = "mongodb://127.0.0.1:27017/careconnect";
+// LIVE VERCEL RE-ROUTE FOR DATABASE ✅
+const dbUri = process.env.MONGO_URI || "mongodb+srv://careconnect_user:SecurePass123@cluster0.rekxv8z.mongodb.net/careconnect?retryWrites=true&w=majority";
 
 // --- Schemas ---
 const userSchemaStructure = new mongoose.Schema({
@@ -33,8 +34,8 @@ const appointmentSchema = new mongoose.Schema({
 
 const Appointment = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);
 
-mongoose.connect(localDbUri)
-    .then(() => console.log("🟢 MONGO DB CONNECTED"))
+mongoose.connect(dbUri)
+    .then(() => console.log("🟢 MONGO DB CLOUD ATLAS CONNECTED"))
     .catch((err) => console.log("🔴 MONGO CONNECTION ERROR:", err.message));
 
 
@@ -46,7 +47,6 @@ mongoose.connect(localDbUri)
 app.get('/api/users/doctors', async (req, res) => {
     try {
         const doctors = await User.find({ role: 'Doctor' }, 'fullName _id');
-        // Array seedhe bhejein taaki map function crash na ho frontend par
         return res.status(200).json(doctors); 
     } catch (e) { 
         return res.status(500).json({ message: e.message }); 
@@ -57,7 +57,7 @@ app.get('/api/users/doctors', async (req, res) => {
 app.get('/api/appointments', async (req, res) => {
     try {
         const list = await Appointment.find({}).sort({ createdAt: -1 });
-        return res.status(200).json(list); // Array return karega frontend table ke liye
+        return res.status(200).json(list); 
     } catch (e) { 
         return res.status(500).json({ message: e.message }); 
     }
@@ -68,7 +68,6 @@ app.post('/api/appointments', async (req, res) => {
     try {
         const { doctorId, dateTime, symptoms } = req.body;
         
-        // Doctor ka naam nikalne ke liye check
         const doctor = await User.findById(doctorId);
         const doctorName = doctor ? doctor.fullName : "Specialist";
 
@@ -112,9 +111,11 @@ app.post('/api/auth/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid Profile Matrix" });
 
-        const token = jwt.sign({ id: user._id }, 'careconnect_secret_token_key', { expiresIn: '1d' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'careconnect_secret_token_key', { expiresIn: '1d' });
         return res.status(200).json({ success: true, token, user: { id: user._id, fullName: user.fullName, role: user.role } });
     } catch (e) { return res.status(500).json({ message: e.message }); }
 });
 
-app.listen(5000, () => console.log('🚀 SYSTEM TERMINAL PORT ONLINE: 5000'));
+// VERCEL COMPLIANT EXPORT & LISTEN
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 SYSTEM TERMINAL PORT ONLINE: ${PORT}`));
