@@ -6,13 +6,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Multi-fallback linkage strategy for complete alignment
-const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://kumailnaqvi291:kumailnaqvi291@cluster0.6ae00.mongodb.net/careconnect?retryWrites=true&w=majority";
+const localDbUri = "mongodb://127.0.0.1:27017/careconnect";
 
+// --- Schemas ---
 const userSchemaStructure = new mongoose.Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -22,87 +21,100 @@ const userSchemaStructure = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', userSchemaStructure);
 
-let isConnected = false;
-const connectDB = async () => {
-    if (mongoose.connection.readyState === 1) {
-        isConnected = true;
-        return;
-    }
-    try {
-        await mongoose.connect(dbUri, {
-            serverSelectionTimeoutMS: 10000,
-            connectTimeoutMS: 10000
-        });
-        isConnected = true;
-        console.log("Database authorized successfully.");
-    } catch (err) {
-        console.error("Database Connection Error:", err.message);
-        isConnected = false;
-        throw err;
-    }
-};
+const appointmentSchema = new mongoose.Schema({
+    patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    patientName: { type: String, default: 'Anonymous Patient' },
+    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    doctorName: { type: String },
+    dateTime: { type: String, required: true }, // Unified Date & Time field
+    symptoms: { type: String, default: 'General Checkup' },
+    status: { type: String, default: 'Scheduled' }
+}, { timestamps: true });
 
-app.use(async (req, res, next) => {
+const Appointment = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);
+
+mongoose.connect(localDbUri)
+    .then(() => console.log("🟢 MONGO DB CONNECTED"))
+    .catch((err) => console.log("🔴 MONGO CONNECTION ERROR:", err.message));
+
+
+// ==========================================
+//        🚨 FIXED API MAP ROUTERS 🚨
+// ==========================================
+
+// 1. Fetch Doctors (Matches Frontend: /api/users/doctors)
+app.get('/api/users/doctors', async (req, res) => {
     try {
-        await connectDB();
-        next();
-    } catch (dbErr) {
-        return res.status(500).json({ 
-            message: "Database access restricted or authentication failed.", 
-            details: dbErr.message 
-        });
+        const doctors = await User.find({ role: 'Doctor' }, 'fullName _id');
+        // Array seedhe bhejein taaki map function crash na ho frontend par
+        return res.status(200).json(doctors); 
+    } catch (e) { 
+        return res.status(500).json({ message: e.message }); 
     }
 });
 
-app.get('/api/status', (req, res) => {
-    res.status(200).json({ status: "online", dbConnected: isConnected });
+// 2. Fetch Appointments Queue (Matches Frontend: /api/appointments)
+app.get('/api/appointments', async (req, res) => {
+    try {
+        const list = await Appointment.find({}).sort({ createdAt: -1 });
+        return res.status(200).json(list); // Array return karega frontend table ke liye
+    } catch (e) { 
+        return res.status(500).json({ message: e.message }); 
+    }
 });
 
+// 3. Book Appointment (Matches Frontend POST: /api/appointments)
+app.post('/api/appointments', async (req, res) => {
+    try {
+        const { doctorId, dateTime, symptoms } = req.body;
+        
+        // Doctor ka naam nikalne ke liye check
+        const doctor = await User.findById(doctorId);
+        const doctorName = doctor ? doctor.fullName : "Specialist";
+
+        const newAppointment = await Appointment.create({
+            doctorId,
+            doctorName,
+            dateTime,
+            symptoms: symptoms || 'General Consultation'
+        });
+        
+        return res.status(201).json({ success: true, appointment: newAppointment });
+    } catch (e) { 
+        return res.status(500).json({ message: e.message }); 
+    }
+});
+
+// 4. Auth Routes
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, role } = req.body;
-        if (!fullName || !email || !password) {
-            return res.status(400).json({ message: "Please fill all fields" });
-        }
+        if (!fullName || !email || !password) return res.status(400).json({ message: "All inputs are mandatory" });
+
         const normalizedEmail = email.toLowerCase().trim();
         const userExists = await User.findOne({ email: normalizedEmail });
-        if (userExists) {
-            return res.status(400).json({ message: "User already exists with this email" });
-        }
+        if (userExists) return res.status(400).json({ message: "Profile already verified" });
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const newUser = await User.create({
-            fullName: fullName.trim(),
-            email: normalizedEmail,
-            password: hashedPassword,
-            role: role || 'Patient'
-        });
-        return res.status(201).json({ success: true, message: "Registration successful" });
-    } catch (error) {
-        return res.status(500).json({ message: "Registration Fault", details: error.message });
-    }
+
+        await User.create({ fullName, email: normalizedEmail, password: hashedPassword, role });
+        return res.status(201).json({ success: true });
+    } catch (e) { return res.status(500).json({ message: e.message }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: "Please fill all fields" });
-        }
-        const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
-        if (!user) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) return res.status(400).json({ message: "Invalid Profile Matrix" });
+
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-        return res.status(200).json({ success: true, token, user: { id: user._id, fullName: user.fullName, email: user.email } });
-    } catch (error) {
-        return res.status(500).json({ message: "Login Exception Internal", details: error.message });
-    }
+        if (!isMatch) return res.status(400).json({ message: "Invalid Profile Matrix" });
+
+        const token = jwt.sign({ id: user._id }, 'careconnect_secret_token_key', { expiresIn: '1d' });
+        return res.status(200).json({ success: true, token, user: { id: user._id, fullName: user.fullName, role: user.role } });
+    } catch (e) { return res.status(500).json({ message: e.message }); }
 });
 
-module.exports = app;
+app.listen(5000, () => console.log('🚀 SYSTEM TERMINAL PORT ONLINE: 5000'));

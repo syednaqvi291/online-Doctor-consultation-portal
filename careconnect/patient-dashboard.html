@@ -2,146 +2,374 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CareConnect | Patient Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Patient Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://meet.jit.si/external_api.js"></script>
     <style>
-        /* AAPKA ORIGINAL DARK DESIGN - NO CHANGES */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f0f4f8; }
-        .sidebar { width: 230px; background: #0f172a; height: 100vh; color: white; padding: 25px; position: fixed; display: flex; flex-direction: column; }
-        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 40px; }
-        .nav-item { padding: 12px; cursor: pointer; color: #94a3b8; display: flex; align-items: center; gap: 12px; transition: 0.3s; margin-bottom: 5px; }
-        .nav-item.active { color: white; background: #1e293b; border-radius: 8px; }
-        .sos-btn { background: #ef4444; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
-
-        .main { margin-left: 260px; padding: 40px; width: 100%; }
-        .stats-row { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 15px 25px; border-radius: 15px; flex: 1; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; border: 1px solid #e2e8f0; }
+        :root { 
+            --bg-main: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; 
+            --accent: #38bdf8; --border-color: #334155; --success: #10b981; --danger: #ef4444; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
         
-        #drGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .dr-card { background: white; border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .dr-img { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
-
-        .btn { padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; font-size: 13px; }
-        .btn-vid { background: #10b981; color: white; }
-        .btn-chat { background: #f59e0b; color: white; }
-        .btn-book { background: #3b82f6; color: white; }
-
-        /* Video Popup Styling */
-        #video-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; padding: 20px; flex-direction: column; }
-        #jitsi-area { flex: 1; border-radius: 15px; overflow: hidden; }
-
-        /* Chat Popup Styling */
-        #chat-window { display: none; position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 2000; flex-direction: column; border: 1px solid #3b82f6; }
-        .chat-header { background: #3b82f6; color: white; padding: 15px; display: flex; justify-content: space-between; font-weight: bold; }
+        .sidebar-nav { width: 280px; background: #090d16; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 25px 15px; position: fixed; height: 100vh; z-index: 100; overflow-y: auto; }
+        .brand-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-left: 10px; }
+        .brand-icon { background: var(--accent); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #0f172a; font-size: 16px; flex-shrink: 0; }
+        .brand-wrapper h2 { font-size: 19px; font-weight: 700; color: #fff; }
+        
+        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; border-radius: 10px; transition: all 0.2s ease; }
+        .nav-item.active a, .nav-item a:hover { background: rgba(56, 189, 248, 0.08); color: var(--accent); }
+        
+        .viewport-main { margin-left: 280px; flex-grow: 1; padding: 40px; max-width: 1400px; width: calc(100% - 280px); }
+        .top-meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; background: rgba(30, 41, 59, 0.4); padding: 18px 25px; border-radius: 16px; border: 1px solid var(--border-color); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .user-welcome h1 { font-size: 22px; font-weight: 700; }
+        .user-welcome p { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: start; }
+        .grid-column-stack { display: flex; flex-direction: column; gap: 30px; }
+        .panel-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); scroll-margin-top: 40px; }
+        .panel-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .doctors-wrapper-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+        .doctor-card { background: #131c2e; border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; text-align: center; position: relative; transition: transform 0.2s, border-color 0.2s; }
+        .doctor-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; position: absolute; top: 15px; right: 15px; box-shadow: 0 0 8px var(--success); }
+        .doctor-card .avatar { width: 55px; height: 55px; background: rgba(56, 189, 248, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: var(--accent); font-size: 20px; }
+        .doctor-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .doctor-card p { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
+        
+        .input-wrapper { margin-bottom: 16px; }
+        .input-wrapper label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .input-wrapper input, .input-wrapper select, .input-wrapper textarea { width: 100%; background: #131c2e; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 13px; outline: none; transition: border-color 0.2s; }
+        
+        .btn-action { width: 100%; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-primary { background: var(--accent); color: #0f172a; }
+        .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-doctor-call { background: var(--success); color: #fff; font-weight: 600; }
+        
+        .log-item { background: #131c2e; border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-color); font-size: 12px; }
+        .badge-ui { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+        
+        .chat-container-box { background: #131c2e; border: 1px solid var(--border-color); border-radius: 12px; height: 220px; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-messages-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-bubble { max-width: 80%; padding: 10px 14px; font-size: 12px; border-radius: 12px; line-height: 1.4; }
+        .chat-bubble.patient { background: var(--accent); color: #0f172a; align-self: flex-end; }
+        .chat-bubble.doctor { background: var(--border-color); color: #fff; align-self: flex-start; }
+        .chat-input-row { display: flex; border-top: 1px solid var(--border-color); background: #090d16; }
+        .chat-input-row input { flex-grow: 1; background: transparent; border: none; padding: 12px; color: #fff; font-size: 13px; outline: none; }
+        .chat-send-btn { background: var(--accent); color: #0f172a; border: none; padding: 0 18px; cursor: pointer; }
+        
+        .file-dropzone-node { border: 2px dashed var(--border-color); border-radius: 12px; padding: 20px; text-align: center; background: #131c2e; cursor: pointer; color: var(--text-muted); font-size: 13px; }
+        .sos-grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .sos-btn-trigger { background: linear-gradient(135deg, #b91c1c, #ef4444); color: #fff; padding: 15px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
+        
+        .video-pipeline-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #090d16; z-index: 999999; display: none; flex-direction: column; }
+        .video-meta-navbar { height: 60px; background: #131c2e; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
+        #jitsi-container { flex-grow: 1; background: #000; }
     </style>
 </head>
 <body>
-    <div id="video-modal">
-        <div id="jitsi-area"></div>
-        <button onclick="stopCall()" style="background:red; color:white; padding:10px; border:none; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:bold;">End Consultation</button>
-    </div>
 
-    <div id="chat-window">
-        <div class="chat-header"><span>Chat with Dr. <span id="chatDrName"></span></span><i class="fas fa-times" onclick="closeChat()" style="cursor:pointer;"></i></div>
-        <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; background:#f8fafc;"></div>
-        <div style="padding:10px; display:flex; gap:5px; border-top:1px solid #ddd;">
-            <input type="text" id="chatInp" placeholder="Type..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <button onclick="sendMsg()" style="background:#3b82f6; border:none; color:white; padding:8px 15px; border-radius:5px;"><i class="fas fa-paper-plane"></i></button>
+    <nav class="sidebar-nav">
+        <div class="brand-wrapper">
+            <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+            <h2>CareConnect</h2>
         </div>
-    </div>
+        <ul class="nav-menu">
+            <li class="nav-item active"><a href="#"><i class="fas fa-columns"></i> Dashboard Home</a></li>
+            <li class="nav-item"><a href="#doctorsSection"><i class="fas fa-user-md"></i> Available Doctors</a></li>
+            <li class="nav-item"><a href="#appointmentSection"><i class="fas fa-calendar-check"></i> Book Appointment</a></li>
+            <li class="nav-item"><a href="#vitalsSection"><i class="fas fa-heartbeat"></i> Health Vitals</a></li>
+            <li class="nav-item"><a href="#aiSection"><i class="fas fa-brain"></i> AI Assistant</a></li>
+            <li class="nav-item"><a href="#sosSection" style="color: #f87171;"><i class="fas fa-exclamation-triangle"></i> Emergency SOS</a></li>
+            <li class="nav-item"><a href="#medicineSection"><i class="fas fa-pills"></i> Medicine Tracker</a></li>
+            <li class="nav-item"><a href="#chatSection"><i class="fas fa-comments"></i> Live Chat Support</a></li>
+            <li class="nav-item"><a href="#uploadSection"><i class="fas fa-file-upload"></i> Upload Lab Reports</a></li>
+            <li class="nav-item" style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <a href="#" id="logoutTrigger" style="color:var(--danger);"><i class="fas fa-power-off"></i> Logout Account</a>
+            </li>
+        </ul>
+    </nav>
 
-    <aside class="sidebar">
-        <div class="logo">CareConnect</div>
-        <div class="nav-item active"><i class="fas fa-columns"></i> Dashboard</div>
-        <div class="nav-item" onclick="startAI()"><i class="fas fa-robot"></i> AI Health Chat</div>
-        <div class="nav-item"><i class="fas fa-calendar-alt"></i> My Appointments</div>
-        <button class="sos-btn" onclick="sendSOS()">EMERGENCY SOS</button>
-        <div class="nav-item" style="margin-top: auto; color: #ef4444;" onclick="logout()">
-            <i class="fas fa-power-off"></i> Logout
-        </div>
-    </aside>
+    <main class="viewport-main">
+        <header class="top-meta-header">
+            <div class="user-welcome">
+                <h1 id="welcomeUserHeading">Patient Dashboard</h1>
+                <p>All-in-one health command system active.</p>
+            </div>
+            <div class="profile-action-node">
+                <div class="profile-meta-info">
+                    <h4 id="clientProfileName">Patient Profile</h4>
+                    <span style="color:var(--accent)">Active Session</span>
+                </div>
+            </div>
+        </header>
 
-    <main class="main">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>Welcome, <span id="uName" style="color: #3b82f6;">kumail</span>! 👋</h1>
-            <div style="color: #64748b;"><i class="fas fa-map-marker-alt"></i> Lucknow, India</div>
-        </div>
-        
-        <div class="stats-row">
-            <div class="stat-card"><i class="fas fa-heartbeat" style="color:#ef4444; font-size:20px;"></i><div><small>Heart Rate</small><div style="font-weight:700;">72 bpm</div></div></div>
-            <div class="stat-card"><i class="fas fa-clock" style="color:#3b82f6; font-size:20px;"></i><div><small>Next Visit</small><div style="font-weight:700;">18 April</div></div></div>
-            <div class="stat-card"><i class="fas fa-user-md" style="color:#10b981; font-size:20px;"></i><div><small>Records</small><div style="font-weight:700;">12 Total</div></div></div>
-        </div>
+        <div class="dashboard-grid">
+            <div class="grid-column-stack">
+                
+                <div class="panel-card" id="doctorsSection">
+                    <h3>Available Doctors <span class="badge-ui" style="color:var(--success); background:rgba(16,185,129,0.12);">Live</span></h3>
+                    <div class="doctors-wrapper-grid" id="doctorsCardGrid">
+                        <p style="color:var(--text-muted); font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Fetching real registered experts from server...</p>
+                    </div>
+                </div>
 
-        <div id="drGrid"></div>
+                <div class="panel-card" id="appointmentSection">
+                    <h3>Book Digital Consultation <span class="badge-ui" style="color:var(--accent); background:rgba(56,189,248,0.12);">Secure</span></h3>
+                    <form id="appointmentFormNode">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                            <div class="input-wrapper" style="margin:0;">
+                                <label>Select Registered Specialist</label>
+                                <select id="apptDoctorSelect" aria-label="Select Specialist" required>
+                                    <option value="">-- Loading Doctors --</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper" style="margin:0;">
+                               <label for="apptDateTime">Preferred Date & Time</label>
+                               <input type="datetime-local" id="apptDateTime" aria-label="Preferred Date and Time" required>
+                            </div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label>Describe Your Symptoms / Medical Reason</label>
+                            <textarea id="apptSymptoms" rows="3" placeholder="e.g., Severe headache and fever since last night..." required></textarea>
+                        </div>
+                        <button class="btn-action btn-success" type="submit"><i class="fas fa-check-circle"></i> Confirm Appointment Booking</button>
+                    </form>
+                    <div id="bookingStatusContainer" style="margin-top:15px;"></div>
+                </div>
+
+                <div class="panel-card" id="vitalsSection">
+                    <h3>Track Health Vitals</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="input-wrapper" style="margin:0;"><label>Blood Pressure</label><input type="text" id="vitalBP" placeholder="120/80"></div>
+                        <div class="input-wrapper" style="margin:0;"><label>Pulse Rate (BPM)</label><input type="number" id="vitalPulse" placeholder="72"></div>
+                        <div class="input-wrapper" style="margin:0;"><label>Blood Sugar (mg/dL)</label><input type="number" id="vitalSugar" placeholder="95"></div>
+                    </div>
+                    <button class="btn-action btn-primary" id="saveVitalsBtn" type="button"><i class="fas fa-plus"></i> Save Vitals</button>
+                    <div id="vitalsLogContainer" style="margin-top:15px;"></div>
+                </div>
+
+                <div class="panel-card" id="aiSection">
+                    <h3>CareConnect AI Medical Assistant</h3>
+                    <div class="input-wrapper"><textarea id="aiQuestion" rows="3" placeholder="Describe symptoms..."></textarea></div>
+                    <button class="btn-action btn-primary" id="aiSubmitBtn" type="button"><i class="fas fa-robot"></i> Run AI Diagnosis</button>
+                    <div id="aiResponse" style="margin-top:15px; font-size:13px; color:#cbd5e1; background:#131c2e; padding:15px; border-radius:12px; display:none;"></div>
+                </div>
+
+                <div class="panel-card" id="uploadSection">
+                    <h3>Upload Lab Reports</h3>
+                    <div class="file-dropzone-node" id="dropzoneContainer">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:30px; margin-bottom:10px; color:var(--accent);"></i>
+                        <p>Click or drag medical PDF reports here to upload</p>
+                        <input type="file" id="reportFileInput" style="display:none;" accept=".pdf,.png,.jpg">
+                    </div>
+                    <div id="uploadStatusContainer" style="margin-top:12px;"></div>
+                </div>
+            </div>
+
+            <div class="grid-column-stack">
+                <div class="panel-card" id="sosSection" style="border: 1px solid rgba(239, 68, 68, 0.4);">
+                    <h3>Emergency SOS Hub</h3>
+                    <div class="sos-grid-layout">
+                        <button class="sos-btn-trigger" id="sosAmbulanceBtn" type="button"><i class="fas fa-ambulance"></i> Ambulance</button>
+                        <button class="sos-btn-trigger" id="sosTraumaBtn" style="background:linear-gradient(135deg, #7f1d1d, #b91c1c);" type="button"><i class="fas fa-hospital"></i> Trauma</button>
+                    </div>
+                    <div id="sosAlertLogs" style="margin-top:12px; font-size:12px; text-align:center; color:var(--danger);"></div>
+                </div>
+
+                <div class="panel-card" id="medicineSection">
+                    <h3>Daily Medicine Tracker</h3>
+                    <div class="input-wrapper"><input type="text" id="medName" placeholder="Medicine name..."></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px;">
+                        <input type="text" id="medDosage" placeholder="e.g., 1 tablet">
+                        <select id="medTiming" aria-label="Medicine Timing"><option value="Morning (Before Food)">Morning</option><option value="Night (After Food)">Night</option></select>
+                    </div>
+                    <button class="btn-action btn-success" id="addMedBtn" type="button">Add Prescription Tracker</button>
+                    <div id="medicineListContainer" style="margin-top:20px;"></div>
+                </div>
+
+                <div class="panel-card" id="chatSection">
+                    <h3>Consultation Live Chat</h3>
+                    <div class="chat-container-box">
+                        <div class="chat-messages-area" id="chatMessagesArea"><div class="chat-bubble doctor">Book an appointment or open video call to activate real-time chat sync.</div></div>
+                        <div class="chat-input-row">
+                            <input type="text" id="chatInputField" placeholder="Type message...">
+                            <button aria-label="Send Message" class="chat-send-btn" id="chatSendButton" type="button"><i class="fas fa-paper-plane"></i></button>                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
+    <div class="video-pipeline-overlay" id="jitsiVideoOverlay">
+        <div class="video-meta-navbar">
+            <span style="font-weight:600;"><i class="fas fa-video" style="color:var(--success);"></i> Live Telemedicine Call Room</span>
+            <button id="closeJitsiBtn" style="background:var(--danger); border:none; color:#fff; padding:8px 16px; cursor:pointer; border-radius:6px; font-weight:600;">Terminate Session</button>
+        </div>
+        <div id="jitsi-container"></div>
+    </div>
+
     <script>
-        document.getElementById('uName').innerText = localStorage.getItem('userName') || 'kumail';
-        let jitsiApi = null;
+        document.addEventListener("DOMContentLoaded", () => {
+            const BACKEND_CORE = "http://localhost:5000/api";
+            const token = localStorage.getItem("token");
+            
+            // FIXED EXTRACTION HERE ✅
+            let localName = localStorage.getItem("name") || "Patient User";
+            document.getElementById("clientProfileName").innerText = localName;
+            document.getElementById("welcomeUserHeading").innerText = `${localName}'s Dashboard`;
 
-        async function fetchDocs() {
-            try {
-                const res = await axios.get("http://localhost:5000/api/user/doctors");
-                document.getElementById('drGrid').innerHTML = res.data.map(doc => `
-                    <div class="dr-card">
-                        <div class="dr-img"><i class="fas fa-user-md" style="font-size:40px; color:#3b82f6;"></i></div>
-                        <h3 style="margin:0;">Dr. ${doc.name}</h3>
-                        <p style="color:#64748b; font-size:12px;">${doc.role.toUpperCase()}</p>
-                        <button class="btn btn-vid" onclick="startCall('${doc.name}')"><i class="fas fa-video"></i> Video Call</button>
-                        <button class="btn btn-chat" onclick="openChat('${doc.name}')"><i class="fas fa-comment"></i> Chat Now</button>
-                        <button class="btn btn-book" onclick="goToBooking('${doc._id}', '${doc.name}')"><i class="fas fa-calendar-check"></i> Book Now</button>
-                    </div>
-                `).join('');
-            } catch (e) { console.log("Check Backend!"); }
-        }
+            let currentActiveAppointmentId = null;
 
-        // PURANE FUNCTIONS - NO CHANGE
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        function goToBooking(id, name) {
-            localStorage.setItem('selectedDoctorId', id);
-            localStorage.setItem('selectedDoctorName', name);
-            window.location.href = 'book-appointment.html';
-        }
-
-        // VIDEO CALL LOGIC
-        function startCall(name) {
-            document.getElementById('video-modal').style.display = 'flex';
-            jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {
-                roomName: "CareConnect_" + name.replace(/\s/g, ''),
-                parentNode: document.querySelector('#jitsi-area')
+            document.getElementById("logoutTrigger").addEventListener("click", () => {
+                localStorage.clear(); window.location.replace("./auth.html");
             });
-        }
-        function stopCall() { if(jitsiApi) jitsiApi.dispose(); document.getElementById('video-modal').style.display = 'none'; }
 
-        // CHAT LOGIC
-        function openChat(name) { document.getElementById('chat-window').style.display = 'flex'; document.getElementById('chatDrName').innerText = name; }
-        function closeChat() { document.getElementById('chat-window').style.display = 'none'; }
-        function sendMsg() {
-            let val = document.getElementById('chatInp').value;
-            if(!val) return;
-            document.getElementById('chat_msgs').innerHTML += `<div style="background:#3b82f6; color:white; padding:8px; border-radius:8px; margin-bottom:5px; align-self:flex-end;">${val}</div>`;
-            document.getElementById('chatInp').value = '';
-        }
+            const fetchRealDatabaseDoctors = async () => {
+                const cardGrid = document.getElementById("doctorsCardGrid");
+                const dropDown = document.getElementById("apptDoctorSelect");
+                
+                try {
+                    const res = await axios.get(`${BACKEND_CORE}/users/doctors`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    let doctors = res.data || [];
+                    
+                    if (Array.isArray(doctors) && doctors.length > 0) {
+                        cardGrid.innerHTML = doctors.map(doc => `
+                            <div class="doctor-card">
+                                <span class="status-dot"></span>
+                                <div class="avatar"><i class="fas fa-user-md"></i></div>
+                                <h4>Dr. ${doc.fullName || doc.name || 'Specialist'}</h4>
+                                <p>${doc.specialization || 'Certified General Expert'}</p>
+                                <button class="btn-sm btn-doctor-call launch-jitsi-btn" data-doc-id="${doc._id}">Video Consultation</button>
+                            </div>`).join('');
 
-        async function startAI() {
-            const p = prompt("Ask AI:");
-            if(p) {
-                const res = await axios.post("http://localhost:5000/api/user/real-ai", {prompt: p});
-                alert("🩺 AI: " + res.data.answer);
-            }
-        }
+                        dropDown.innerHTML = '<option value="">-- Select Registered Specialist --</option>' + 
+                            doctors.map(doc => `<option value="${doc._id}">Dr. ${doc.fullName || doc.name || 'Specialist'}</option>`).join('');
+                        
+                    } else {
+                        cardGrid.innerHTML = `<p style="color:var(--text-muted);">No doctors have registered in the database yet.</p>`;
+                        dropDown.innerHTML = `<option value="">No registered specialists found</option>`;
+                    }
+                } catch(err) {
+                    cardGrid.innerHTML = `<p style="color:var(--danger);">Error connecting to database doctors endpoint.</p>`;
+                }
+            };
+            fetchRealDatabaseDoctors();
 
-        async function sendSOS() {
-            if(confirm("Send Emergency SOS?")) {
-                const res = await axios.post("http://localhost:5000/api/user/sos");
-                alert(res.data.answer);
-            }
-        }
+            document.getElementById("appointmentFormNode").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const doctorId = document.getElementById("apptDoctorSelect").value;
+                const appointmentTime = document.getElementById("apptDateTime").value;
+                const symptoms = document.getElementById("apptSymptoms").value.trim();
+                const statusBox = document.getElementById("bookingStatusContainer");
 
-        window.onload = fetchDocs;
+                if(!doctorId) {
+                    alert("Please select a valid doctor first!"); return;
+                }
+
+                statusBox.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting appointment loop...`;
+
+                try {
+                    const response = await axios.post(`${BACKEND_CORE}/appointments`, {
+                        doctorId: doctorId,
+                        dateTime: appointmentTime,
+                        symptoms: symptoms
+                    }, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if(response.data && response.data.appointment) {
+                        currentActiveAppointmentId = response.data.appointment._id;
+                    }
+
+                    statusBox.innerHTML = `<div class="log-item" style="border-color:var(--success);"><div style="color:var(--success)"><strong><i class="fas fa-check-circle"></i> Complete!</strong> Queued instantly into Doctor Dashboard.</div></div>`;
+                    document.getElementById("apptSymptoms").value = "";
+                } catch(err) {
+                    statusBox.innerHTML = `<div class="log-item" style="border-color:var(--danger);"><div style="color:var(--danger)"><strong><i class="fas fa-times-circle"></i> API Error!</strong> Could not store data on server.</div></div>`;
+                }
+            });
+
+            // Live static elements fallback triggers
+            document.getElementById("saveVitalsBtn").addEventListener("click", () => {
+                const bp = document.getElementById("vitalBP").value || "N/A";
+                const pulse = document.getElementById("vitalPulse").value || "N/A";
+                const sugar = document.getElementById("vitalSugar").value || "N/A";
+                document.getElementById("vitalsLogContainer").innerHTML += `<div class="log-item"><div><strong>BP:</strong> ${bp} | <strong>Pulse:</strong> ${pulse} BPM | <strong>Sugar:</strong> ${sugar} mg/dL</div><span class="badge-ui" style="background:#334155;">Logged</span></div>`;
+                document.getElementById("vitalBP").value = ""; document.getElementById("vitalPulse").value = ""; document.getElementById("vitalSugar").value = "";
+            });
+
+            document.getElementById("aiSubmitBtn").addEventListener("click", () => {
+                const box = document.getElementById("aiResponse"); box.style.display = "block";
+                box.innerHTML = `<strong>CareConnect AI:</strong> Processing parameters against system diagnostics. Please await verification.`;
+            });
+
+            const zone = document.getElementById("dropzoneContainer"); const input = document.getElementById("reportFileInput");
+            zone.addEventListener("click", () => input.click());
+            input.addEventListener("change", () => { if(input.files.length > 0) document.getElementById("uploadStatusContainer").innerHTML = `<div class="log-item"><div><i class="fas fa-file-pdf" style="color:var(--danger)"></i> ${input.files[0].name}</div><span class="badge-ui">Uploaded</span></div>`; });
+
+            document.getElementById("sosAmbulanceBtn").addEventListener("click", () => { alert("Ambulance Dispatched!"); });
+            document.getElementById("sosTraumaBtn").addEventListener("click", () => { alert("Trauma Unit Alerted!"); });
+            
+            document.addEventListener("click", (e) => {
+                if (e.target && e.target.classList.contains("launch-jitsi-btn")) {
+                    document.getElementById("jitsiVideoOverlay").style.setProperty("display", "flex", "important");
+                    document.getElementById("jitsi-container").innerHTML = `<iframe src="https://meet.jit.si/CareConnect-Session-${currentActiveAppointmentId || 'InstantRoom'}" style="width:100%; height:100%; border:none;" allow="camera; microphone; fullscreen; autoplay"></iframe>`;
+                }
+                if (e.target && e.target.id === "closeJitsiBtn") {
+                    document.getElementById("jitsi-container").innerHTML = "";
+                    document.getElementById("jitsiVideoOverlay").style.setProperty("display", "none", "important");
+                }
+            });
+
+            // ==========================================
+            // LIVE CHAT LOGIC INTEGRATION (ADDED) ✅
+            // ==========================================
+            const chatMessagesArea = document.getElementById("chatMessagesArea");
+            const chatInputField = document.getElementById("chatInputField");
+            const chatSendButton = document.getElementById("chatSendButton");
+
+            const sendPatientChatMessage = async () => {
+                const textMessage = chatInputField.value.trim();
+                if (!textMessage) return;
+
+                // 1. UI par message instantly render karo
+                chatMessagesArea.innerHTML += `<div class="chat-bubble patient">${textMessage}</div>`;
+                chatInputField.value = "";
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+
+                // 2. Backend API par sync karo (Bina baki functionality ko chhede)
+                try {
+                    await axios.post(`${BACKEND_CORE}/chat`, {
+                        appointmentId: currentActiveAppointmentId,
+                        message: textMessage,
+                        senderType: "patient"
+                    }, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } catch (err) {
+                    console.error("Chat sync error on server:", err);
+                }
+            };
+
+            // Trigger on Click
+            chatSendButton.addEventListener("click", sendPatientChatMessage);
+
+            // Trigger on Enter Keypress
+            chatInputField.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    sendPatientChatMessage();
+                }
+            });
+        });
     </script>
 </body>
 </html>
