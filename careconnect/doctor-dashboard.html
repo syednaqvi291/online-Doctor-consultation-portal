@@ -116,6 +116,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // VERCEL DYNAMIC ROUTING CONFIGURATION ✅
             const BACKEND_CORE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
                 ? "http://localhost:5000/api" 
                 : `${window.location.origin}/api`;
@@ -155,15 +156,14 @@
                     }
 
                     tableBody.innerHTML = appointments.map(appt => {
-                        const pName = appt.patientName || (appt.patientId ? (appt.patientId.fullName || appt.patientId.name) : null) || 'Anonymous';
                         return `
                             <tr>
-                                <td><i class="fas fa-user-injured" style="color:var(--video-blue); margin-right:8px;"></i><strong>${pName}</strong></td>
+                                <td><i class="fas fa-user-injured" style="color:var(--video-blue); margin-right:8px;"></i><strong>${appt.patientName || 'Anonymous'}</strong></td>
                                 <td>${appt.symptoms || "General Checkup Notes"}</td>
                                 <td><span style="color:var(--text-muted); font-size:12px;"><i class="far fa-clock"></i> ${appt.dateTime || 'Instant Call'}</span></td>
                                 <td><span class="badge-ui">${appt.status || "Waiting"}</span></td>
                                 <td>
-                                    <button class="btn-chat-open open-chat-only-btn" data-appt-id="${appt._id}" data-patient-name="${pName}">
+                                    <button class="btn-chat-open open-chat-only-btn" data-appt-id="${appt._id}" data-patient-name="${appt.patientName || 'Patient'}">
                                         <i class="fas fa-comments"></i> Chat
                                     </button>
                                     <button class="btn-call launch-call-btn" data-appt-id="${appt._id}">

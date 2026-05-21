@@ -57,6 +57,7 @@
         
         .chat-container-box { background: #131c2e; border: 1px solid var(--border-color); border-radius: 12px; height: 220px; display: flex; flex-direction: column; overflow: hidden; }
         .chat-messages-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-messages-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .chat-bubble { max-width: 80%; padding: 10px 14px; font-size: 12px; border-radius: 12px; line-height: 1.4; }
         .chat-bubble.patient { background: var(--accent); color: #0f172a; align-self: flex-end; }
         .chat-bubble.doctor { background: var(--border-color); color: #fff; align-self: flex-start; }
@@ -218,6 +219,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // VERCEL DYNAMIC ROUTING CONFIGURATION ✅
             const BACKEND_CORE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
                 ? "http://localhost:5000/api" 
                 : `${window.location.origin}/api`;
@@ -245,24 +247,17 @@
                     let doctors = res.data || [];
                     
                     if (Array.isArray(doctors) && doctors.length > 0) {
-                        cardGrid.innerHTML = doctors.map(doc => {
-                            const dName = doc.fullName || doc.name || doc.email || 'Specialist';
-                            const dSpec = doc.specialization || doc.specialty || 'Certified General Expert';
-                            return `
+                        cardGrid.innerHTML = doctors.map(doc => `
                             <div class="doctor-card">
                                 <span class="status-dot"></span>
                                 <div class="avatar"><i class="fas fa-user-md"></i></div>
-                                <h4>Dr. ${dName}</h4>
-                                <p>${dSpec}</p>
+                                <h4>Dr. ${doc.fullName || doc.name || 'Specialist'}</h4>
+                                <p>${doc.specialization || 'Certified General Expert'}</p>
                                 <button class="btn-sm btn-doctor-call launch-jitsi-btn" data-doc-id="${doc._id}">Video Consultation</button>
-                            </div>`;
-                        }).join('');
+                            </div>`).join('');
 
                         dropDown.innerHTML = '<option value="">-- Select Registered Specialist --</option>' + 
-                            doctors.map(doc => {
-                                const dName = doc.fullName || doc.name || doc.email || 'Specialist';
-                                return `<option value="${doc._id}">Dr. ${dName}</option>`;
-                            }).join('');
+                            doctors.map(doc => `<option value="${doc._id}">Dr. ${doc.fullName || doc.name || 'Specialist'}</option>`).join('');
                         
                     } else {
                         cardGrid.innerHTML = `<p style="color:var(--text-muted);">No doctors have registered in the database yet.</p>`;
