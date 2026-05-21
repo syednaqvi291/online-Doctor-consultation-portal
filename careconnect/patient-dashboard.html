@@ -219,7 +219,6 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // VERCEL DYNAMIC ROUTING CONFIGURATION ✅
             const BACKEND_CORE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
                 ? "http://localhost:5000/api" 
                 : `${window.location.origin}/api`;
@@ -241,23 +240,31 @@
                 const dropDown = document.getElementById("apptDoctorSelect");
                 
                 try {
-                    const res = await axios.get(`${BACKEND_CORE}/users/doctors`, {
+                    let res = await axios.get(`${BACKEND_CORE}/users/doctors`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     let doctors = res.data || [];
+                    
+                    if (!Array.isArray(doctors) || doctors.length === 0) {
+                        const fallbackRes = await axios.get(`${BACKEND_CORE}/users`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const allUsers = fallbackRes.data || [];
+                        doctors = allUsers.filter(u => u.role === 'doctor' || u.role === 'Doctor' || u.role === 'DOCTOR');
+                    }
                     
                     if (Array.isArray(doctors) && doctors.length > 0) {
                         cardGrid.innerHTML = doctors.map(doc => `
                             <div class="doctor-card">
                                 <span class="status-dot"></span>
                                 <div class="avatar"><i class="fas fa-user-md"></i></div>
-                                <h4>Dr. ${doc.fullName || doc.name || 'Specialist'}</h4>
+                                <h4>Dr. ${doc.full_name || doc.fullName || doc.name || 'Specialist'}</h4>
                                 <p>${doc.specialization || 'Certified General Expert'}</p>
                                 <button class="btn-sm btn-doctor-call launch-jitsi-btn" data-doc-id="${doc._id}">Video Consultation</button>
                             </div>`).join('');
 
                         dropDown.innerHTML = '<option value="">-- Select Registered Specialist --</option>' + 
-                            doctors.map(doc => `<option value="${doc._id}">Dr. ${doc.fullName || doc.name || 'Specialist'}</option>`).join('');
+                            doctors.map(doc => `<option value="${doc._id}">Dr. ${doc.full_name || doc.fullName || doc.name || 'Specialist'}</option>`).join('');
                         
                     } else {
                         cardGrid.innerHTML = `<p style="color:var(--text-muted);">No doctors have registered in the database yet.</p>`;
@@ -343,7 +350,7 @@
 
                 chatMessagesArea.innerHTML += `<div class="chat-bubble patient">${textMessage}</div>`;
                 chatInputField.value = "";
-                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+                chatMessagesArea.scrollHeight;
 
                 try {
                     await axios.post(`${BACKEND_CORE}/chat`, {

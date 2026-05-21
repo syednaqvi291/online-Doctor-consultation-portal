@@ -40,6 +40,7 @@
 
         .chat-container-box { display: flex; flex-direction: column; height: 380px; background: #090d16; border-radius: 14px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 15px; }
         .chat-messages-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-messages-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
         .chat-bubble.patient { background: var(--bg-card); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; }
         .chat-bubble.doctor { background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
@@ -116,7 +117,6 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // VERCEL DYNAMIC ROUTING CONFIGURATION ✅
             const BACKEND_CORE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
                 ? "http://localhost:5000/api" 
                 : `${window.location.origin}/api`;
@@ -156,14 +156,15 @@
                     }
 
                     tableBody.innerHTML = appointments.map(appt => {
+                        const pName = appt.patientId?.full_name || appt.patientId?.name || appt.patientName || 'Anonymous';
                         return `
                             <tr>
-                                <td><i class="fas fa-user-injured" style="color:var(--video-blue); margin-right:8px;"></i><strong>${appt.patientName || 'Anonymous'}</strong></td>
+                                <td><i class="fas fa-user-injured" style="color:var(--video-blue); margin-right:8px;"></i><strong>${pName}</strong></td>
                                 <td>${appt.symptoms || "General Checkup Notes"}</td>
-                                <td><span style="color:var(--text-muted); font-size:12px;"><i class="far fa-clock"></i> ${appt.dateTime || 'Instant Call'}</span></td>
+                                <td><span style="color:var(--text-muted); font-size:12px;"><i class="far fa-clock"></i> ${appt.dateTime || appt.appointment_date || 'Instant Call'}</span></td>
                                 <td><span class="badge-ui">${appt.status || "Waiting"}</span></td>
                                 <td>
-                                    <button class="btn-chat-open open-chat-only-btn" data-appt-id="${appt._id}" data-patient-name="${appt.patientName || 'Patient'}">
+                                    <button class="btn-chat-open open-chat-only-btn" data-appt-id="${appt._id}" data-patient-name="${pName}">
                                         <i class="fas fa-comments"></i> Chat
                                     </button>
                                     <button class="btn-call launch-call-btn" data-appt-id="${appt._id}">
